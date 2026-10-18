@@ -74,3 +74,8 @@
 .sticker-pink{font-size:21px;line-height:1.04;padding:12px 7px;letter-spacing:-.3px}
 @media(max-width:1050px){.sticker-pink{font-size:17px;padding:9px 5px}}
 @media(max-width:760px){.sticker-pink{font-size:15px;line-height:1.06;padding:8px 4px}}
+
+/* Footer silhouette matched to reference; original ink background retained. */
+footer{border-radius:40px 40px 0 0}
+.footer-wordmark{text-align:center;margin-inline:0;width:100%;transform-origin:center}
+@media(max-width:760px){footer{border-radius:28px 28px 0 0}}
