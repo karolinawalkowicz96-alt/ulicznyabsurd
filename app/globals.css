@@ -24,3 +24,12 @@
 .quantity {
   border-radius: 12px;
 }
+
+/* Kolekcja — pełne, naprzemienne prezentacje produktów */
+.product-list{display:flex;flex-direction:column;gap:120px}
+.product-list .product-feature{padding-top:10px}
+.product-list .product-feature+.product-feature{border-top:1px solid var(--line);padding-top:110px}
+.product-feature.reverse .product-photo{order:2}
+.product-feature.reverse .product-copy{order:1}
+.modal-size-preview{margin-top:30px;margin-bottom:22px}
+@media(max-width:760px){.product-list{gap:65px}.product-list .product-feature+.product-feature{padding-top:60px}.product-feature.reverse .product-photo,.product-feature.reverse .product-copy{order:initial}}

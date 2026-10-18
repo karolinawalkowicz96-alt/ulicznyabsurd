@@ -4,9 +4,9 @@ import '@fontsource/space-grotesk/400.css';
 import '@fontsource/space-grotesk/600.css';
 import './globals.css';
 export const metadata: Metadata = {
- metadataBase: new URL('https://uliczny-absurd.peppyluck4.chatgpt.site'),
+ metadataBase: new URL('https://ulicznyabsurd.vercel.app'),
  title: {default: 'Uliczny Absurd — nosi się niepoważnie', template: '%s | Uliczny Absurd'},
- description: 'Humor z ulicy. Absurd w internecie. Koszulki z charakterem. Poznaj Uliczny Absurd.',
+ description: 'Koszulki z charakterem. Poznaj kolekcję Uliczny Absurd.',
  robots: {index: false, follow: false},
  openGraph: {title: 'Uliczny Absurd', description: 'Nosi się niepoważnie.', locale: 'pl_PL', type: 'website', images: ['/logo-texture.webp']},
  icons: { icon: '/favicon.png' }
