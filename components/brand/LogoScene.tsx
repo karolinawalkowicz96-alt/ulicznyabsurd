@@ -14,12 +14,12 @@ export default function LogoScene() {
                 return;
             let renderer: InstanceType<typeof T.WebGLRenderer>;
             try {
-                renderer = new T.WebGLRenderer({ alpha: true, antialias: window.devicePixelRatio < 2, powerPreference: 'low-power' });
+                renderer = new T.WebGLRenderer({ alpha: true, antialias: true, powerPreference: 'low-power' });
             }
             catch {
                 return;
             }
-            renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+            renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
             renderer.setClearColor(0, 0);
             renderer.outputColorSpace = T.SRGBColorSpace;
             el.appendChild(renderer.domElement);
@@ -28,8 +28,8 @@ export default function LogoScene() {
             camera.position.z = 7.5;
             const group = new T.Group();
             scene.add(group);
-            const side = new T.MeshPhysicalMaterial({ color: 0x191616, roughness: .24, metalness: .08, clearcoat: 1 });
-            const body = new T.Mesh(new T.CylinderGeometry(1.68, 1.68, .28, 96), side);
+            const side = new T.MeshPhysicalMaterial({ color: 0xe5a924, roughness: .2, metalness: .65, clearcoat: 1 });
+            const body = new T.Mesh(new T.CylinderGeometry(1.68, 1.68, .34, 128), side);
             body.rotation.x = Math.PI / 2;
             group.add(body);
             const rim = new T.Mesh(new T.TorusGeometry(1.65, .055, 12, 96), side);
@@ -43,8 +43,9 @@ export default function LogoScene() {
                 }
                 texture = tex;
                 tex.colorSpace = T.SRGBColorSpace;
+                tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
                 const face = new T.Mesh(new T.CircleGeometry(1.65, 96), new T.MeshPhysicalMaterial({ map: tex, roughness: .43, metalness: 0, clearcoat: .6, clearcoatRoughness: .23 }));
-                face.position.z = .155;
+                face.position.z = .18;
                 group.add(face);
                 setReady(true);
             });
