@@ -1,6 +1,11 @@
-export const platforms = ['Facebook', 'TikTok', 'YouTube', 'Instagram'] as const;
+export const platforms = ['Facebook', 'Instagram', 'YouTube', 'TikTok'] as const;
 export type Platform = typeof platforms[number];
-export const profiles: Record<Platform, string | null> = { Facebook: null, TikTok: null, YouTube: null, Instagram: null };
+export const profiles: Record<Platform, string> = {
+    Facebook: 'https://www.facebook.com/ulicznyabsurd/',
+    Instagram: 'https://www.instagram.com/ulicznyabsurd/',
+    YouTube: 'https://www.youtube.com/@UlicznyAbsurd',
+    TikTok: 'https://tiktok.com/@ulicznyabsurd',
+};
 export const faq = [
     ['Jak dobrać rozmiar?', 'W panelu produktu wybierzesz rozmiar XS–XXL. Wymiary nie są jeszcze potwierdzone — tabela zostanie uzupełniona przed startem sprzedaży.'],
     ['Jak zamówić koszulkę?', 'Wybierz rozmiar i ilość, a następnie dodaj koszulkę do koszyka. Teraz działa podgląd sklepu: nie przyjmujemy zamówień ani płatności.'],

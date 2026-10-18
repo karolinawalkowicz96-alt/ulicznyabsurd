@@ -1,5 +1,5 @@
 import { api, empty, number, type Adapter } from './types';
-export const youtube: Adapter = { platform: 'YouTube', ttl: 3600, configured: () => !!(process.env.YOUTUBE_API_KEY && process.env.YOUTUBE_CHANNEL_ID), fetch: async () => {
+export const youtube: Adapter = { platform: 'YouTube', ttl: 900, configured: () => !!(process.env.YOUTUBE_API_KEY && process.env.YOUTUBE_CHANNEL_ID), fetch: async () => {
         const q = new URLSearchParams({ part: 'statistics', id: process.env.YOUTUBE_CHANNEL_ID!, key: process.env.YOUTUBE_API_KEY! });
         const d = await api<{
             items?: {

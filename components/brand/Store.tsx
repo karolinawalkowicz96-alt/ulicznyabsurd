@@ -6,6 +6,12 @@ import { product, sizes, money, validCart, type CartItem, type Size } from '@/li
 import { faq, platforms, profiles } from '@/lib/content';
 import type { SocialSnapshot } from '@/lib/social/types';
 function Mark() { return <img src="/logo-texture.webp" alt="Uliczny Absurd" width="56" height="56" className="mark"/>; }
+function SocialGlyph({ platform }: { platform: (typeof platforms)[number] }) {
+    if (platform === 'Facebook') return <span className="social-glyph social-glyph-facebook" aria-hidden="true"><svg viewBox="0 0 64 64"><path d="M37 56V34h8l2-9H37v-5c0-3 2-5 6-5h5V7c-2-1-6-1-10-1-10 0-16 6-16 15v4h-7v9h7v22z" fill="currentColor"/></svg></span>;
+    if (platform === 'Instagram') return <span className="social-glyph social-glyph-instagram" aria-hidden="true"><svg viewBox="0 0 64 64"><rect x="12" y="12" width="40" height="40" rx="12" fill="none" stroke="currentColor" strokeWidth="5"/><circle cx="32" cy="32" r="10" fill="none" stroke="currentColor" strokeWidth="5"/><circle cx="45" cy="19" r="3.5" fill="currentColor"/></svg></span>;
+    if (platform === 'YouTube') return <span className="social-glyph social-glyph-youtube" aria-hidden="true"><svg viewBox="0 0 64 64"><rect x="7" y="15" width="50" height="34" rx="11" fill="currentColor"/><path d="m27 23 17 9-17 9z" fill="var(--ink)"/></svg></span>;
+    return <span className="social-glyph social-glyph-tiktok" aria-hidden="true"><svg viewBox="0 0 64 64"><path d="M38 10c2 8 7 12 14 13v10c-5 0-10-2-14-5v15c0 9-7 16-16 16S6 52 6 43s7-16 16-16c2 0 4 0 6 1v10c-2-1-3-1-5-1-4 0-7 3-7 7s3 7 7 7 7-3 7-8V10z" fill="currentColor"/></svg></span>;
+}
 
 type ShowcaseProduct = {
     id: string;
@@ -51,40 +57,22 @@ const showcaseProducts: ShowcaseProduct[] = [
         eyebrow: 'PROJEKT 005 / TRENING CODZIENNY', photoTag: 'PROJEKT 005 / BIAŁA', stamp: ['FORMA?', 'JEST ROBIONA'],
     },
     {
-        id: 'taca-06', name: 'Dycha na tacę', title: ['DYCHA', 'NA TACĘ.'], image: '/products/dycha-na-tace.webp',
-        alt: 'Biała koszulka z księdzem w żółtym samochodzie i żartem o cenach paliwa',
-        description: 'Kiedy nawet święty budżet nie wytrzymuje cen paliwa. Klasyka ulicznej ekonomii.',
-        eyebrow: 'PROJEKT 006 / EKONOMIA ULICZNA', photoTag: 'PROJEKT 006 / BIAŁA', stamp: ['CENY?', 'BEZ LITOŚCI'],
-    },
-    {
-        id: 'dom-07', name: 'Mogłem zostać w domu', title: ['MOGŁEM ZOSTAĆ', 'W DOMU.'], image: '/products/moglem-zostac-w-domu.webp',
+        id: 'dom-06', name: 'Mogłem zostać w domu', title: ['MOGŁEM ZOSTAĆ', 'W DOMU.'], image: '/products/moglem-zostac-w-domu.webp',
         alt: 'Biała koszulka z mokrym kotem i napisem Mogłem zostać w domu',
         description: 'Prognoza była optymistyczna. Rzeczywistość jak zwykle miała własny plan. Dla zawodowych maruderów.',
-        eyebrow: 'PROJEKT 007 / POGODA Z CHARAKTEREM', photoTag: 'PROJEKT 007 / BIAŁA', stamp: ['WYJŚCIE?', 'BŁĄD 404'],
+        eyebrow: 'PROJEKT 006 / POGODA Z CHARAKTEREM', photoTag: 'PROJEKT 006 / BIAŁA', stamp: ['WYJŚCIE?', 'BŁĄD 404'],
     },
     {
-        id: 'paliwko-08', name: 'Piwko to moje paliwko', title: ['PIWKO TO MOJE', 'PALIWKO.'], image: '/products/piwko-paliwko.webp',
+        id: 'paliwko-07', name: 'Piwko to moje paliwko', title: ['PIWKO TO MOJE', 'PALIWKO.'], image: '/products/piwko-paliwko.webp',
         alt: 'Biała koszulka z zabawną pompą piwną i napisem Piwko to moje paliwko',
         description: 'Motoryzacja spotyka złoty napój i nagle wszystko nabiera mocy. Projekt z przymrużeniem oka.',
-        eyebrow: 'PROJEKT 008 / PEŁNY BAK HUMORU', photoTag: 'PROJEKT 008 / BIAŁA', stamp: ['BAK?', 'PEŁNY'],
+        eyebrow: 'PROJEKT 007 / PEŁNY BAK HUMORU', photoTag: 'PROJEKT 007 / BIAŁA', stamp: ['BAK?', 'PEŁNY'],
     },
     {
-        id: 'zawodowcy-retro-09', name: 'Zawodowcy trenują codziennie — retro', title: ['ZAWODOWCY', 'CODZIENNIE.'], image: '/products/zawodowcy-trenuja-zielen.webp',
-        alt: 'Biała koszulka retro z postacią w dresie i napisem Zawodowcy trenują codziennie',
-        description: 'Ten sam trening, inna liga stylu. Retro wersja dla tych, którzy konsekwencję mają opanowaną.',
-        eyebrow: 'PROJEKT 009 / RETRO TRENING', photoTag: 'PROJEKT 009 / BIAŁA', stamp: ['RETRO?', 'ZAWODOWO'],
-    },
-    {
-        id: 'ceny-10', name: 'Ceny lecą w górę', title: ['CENY LECĄ', 'W GÓRĘ.'], image: '/products/ceny-leca-w-gore.webp',
+        id: 'ceny-08', name: 'Ceny lecą w górę', title: ['CENY LECĄ', 'W GÓRĘ.'], image: '/products/ceny-leca-w-gore.webp',
         alt: 'Biała koszulka z kasjerem i napisem Ceny tak lecą w górę, że od małego muszę zapierdalać',
         description: 'Od małego na froncie inflacji. Kasjer wie swoje, paragon wie jeszcze więcej.',
-        eyebrow: 'PROJEKT 010 / INFLACJA OD MAŁEGO', photoTag: 'PROJEKT 010 / BIAŁA', stamp: ['TANIEJ?', 'NIE DZIŚ'],
-    },
-    {
-        id: 'szef-11', name: 'Szef imprezy — ujęcie 02', title: ['SZEF', 'IMPREZY.'], image: '/products/szef-imprezy-mieta.webp',
-        alt: 'Biała koszulka z napisem Szef imprezy na miętowym pastelowym tle',
-        description: 'Szef wraca na drugie ujęcie. Ten sam charakter, jeszcze więcej pastelowego luzu.',
-        eyebrow: 'PROJEKT 011 / DRUGIE UJĘCIE', photoTag: 'PROJEKT 011 / BIAŁA', stamp: ['SZEF?', 'OBECNY'],
+        eyebrow: 'PROJEKT 008 / INFLACJA OD MAŁEGO', photoTag: 'PROJEKT 008 / BIAŁA', stamp: ['TANIEJ?', 'NIE DZIŚ'],
     },
 ];
 function Dialog({ title, onClose, children, wide = false }: {
@@ -102,16 +90,25 @@ export default function Store({ initialProduct = false }: {
     initialProduct?: boolean;
 }) {
     const [cart, setCart] = useState<CartItem[]>([]), [hydrated, setHydrated] = useState(false), [cartOpen, setCartOpen] = useState(false), [productOpen, setProductOpen] = useState(initialProduct), [showcaseIndex, setShowcaseIndex] = useState(0), [menu, setMenu] = useState(false), [size, setSize] = useState<Size | null>(null), [quantity, setQuantity] = useState(1), [error, setError] = useState(''), [toast, setToast] = useState(''), [checkout, setCheckout] = useState(false), [zoom, setZoom] = useState(false);
-    const [stats, setStats] = useState<SocialSnapshot[] | null>(null), [statsError, setStatsError] = useState(false), [selected, setSelected] = useState(0);
+    const [stats, setStats] = useState<SocialSnapshot[] | null>(null), [statsError, setStatsError] = useState(false), [statsRefreshing, setStatsRefreshing] = useState(false), [selected, setSelected] = useState(0);
     const [formState, setFormState] = useState<'idle' | 'sending' | 'success' | 'error'>('idle'), [formMessage, setFormMessage] = useState('');
     useEffect(() => { try {
         setCart(validCart(JSON.parse(localStorage.getItem('ua-cart-v1') || '[]')));
     }
-    catch { } setHydrated(true); const c = new AbortController(); fetch('/api/stats', { signal: c.signal }).then(r => { if (!r.ok)
-        throw Error(); return r.json(); }).then(d => setStats((d as {
-        platforms: SocialSnapshot[];
-    }).platforms)).catch(e => { if (e.name !== 'AbortError')
-        setStatsError(true); }); return () => c.abort(); }, []);
+    catch { } setHydrated(true); }, []);
+    useEffect(() => { loadStats(true); const timer = window.setInterval(() => loadStats(true), 5 * 60 * 1000); return () => window.clearInterval(timer); }, []);
+    async function loadStats(silent = false) {
+        if (!silent) setStatsRefreshing(true);
+        try {
+            const r = await fetch(`/api/stats?t=${Date.now()}`, { cache: 'no-store' });
+            if (!r.ok) throw Error();
+            const d = await r.json() as { platforms: SocialSnapshot[] };
+            setStats(d.platforms);
+            setStatsError(false);
+        }
+        catch { setStatsError(true); }
+        finally { if (!silent) setStatsRefreshing(false); }
+    }
     useEffect(() => { if (hydrated)
         try {
             localStorage.setItem('ua-cart-v1', JSON.stringify(cart));
@@ -171,6 +168,9 @@ export default function Store({ initialProduct = false }: {
         setFormMessage((e as Error).message);
     } }
     const current = stats?.[selected];
+    const viewSources = stats?.filter(item => item.views !== null).length || 0;
+    const totalViews = viewSources ? stats!.reduce((sum, item) => sum + (item.views || 0), 0) : null;
+    const totalFollowers = stats?.every(item => item.followers !== null) ? stats.reduce((sum, item) => sum + (item.followers || 0), 0) : null;
     const activeShowcase = showcaseProducts[showcaseIndex] || showcaseProducts[0];
     return <><a href="#main" className="skip-link">Przejdź do treści</a><div className="preview-bar">PODGLĄD MARKI I SKLEPU <span>•</span> sprzedaż jeszcze nie wystartowała</div>
  <header className="header"><a href="/" className="brand" aria-label="Uliczny Absurd — strona główna"><Mark /><span>ULICZNY<br />ABSURD</span></a><nav aria-label="Główna nawigacja"><a href="#kolekcja">KOSZULKI</a><a href="#spolecznosc">NASZ INTERNET</a><a href="#kontakt">WSPÓŁPRACA <ArrowUpRight size={16}/></a></nav><div className="header-actions"><button className="cart-button" onClick={() => { setError(''); setCartOpen(true); }}><ShoppingBag size={19}/><span>KOSZYK</span><b>{count}</b></button><button className="icon-button mobile-menu" aria-label="Otwórz menu" onClick={() => setMenu(true)}><Menu /></button></div></header>
@@ -183,7 +183,7 @@ export default function Store({ initialProduct = false }: {
         const n = (selected + (['ArrowDown', 'ArrowRight'].includes(e.key) ? 1 : 3)) % 4;
         setSelected(n);
         document.getElementById(`tab-${n}`)?.focus();
-    } }} onClick={() => setSelected(i)}><span className="platform-number">0{i + 1}</span>{p}<ArrowUpRight /></button>)}</div><div className="social-display" role="tabpanel" id="social-panel" aria-labelledby={`tab-${selected}`}><span className="status-pill"><i />{current?.status === 'live' ? 'DANE Z API' : current?.status === 'manual' ? 'ZWERYFIKOWANE RĘCZNIE' : current?.status === 'stale' ? 'DANE NIEAKTUALNE' : current?.status === 'unavailable' ? 'API NIEDOSTĘPNE' : current?.status === 'partial' ? 'DANE CZĘŚCIOWE' : 'BRAK AUTORYZACJI / PODGLĄD'}</span><div className="social-number" key={selected}>{current?.followers != null ? <AnimatedNumber value={current.followers}/> : statsError ? '—' : !stats ? '…' : '— —'}</div><h3>{selected === 2 ? 'subskrypcje' : 'obserwacje'} na {platforms[selected]}</h3><p>{statsError ? 'Nie udało się pobrać statusu. Spróbuj ponownie później.' : current?.followers != null ? 'Pobrane wartości odnoszą się do tej platformy.' : 'Tu pojawią się prawdziwe liczby. Bez podkręcania licznika.'}</p>{current?.views != null && <p>{current.views.toLocaleString('pl-PL')} wyświetleń • {current.viewsScope}</p>}{profiles[platforms[selected]] ? <a className="text-link" href={profiles[platforms[selected]]!} target="_blank" rel="noreferrer">Zobacz profil <ArrowUpRight size={18}/></a> : <span className="social-pending">Oficjalny link czeka na potwierdzenie</span>}{current?.note && <p>{current.note}</p>}<small>{current?.updatedAt ? `Aktualizacja: ${new Date(current.updatedAt).toLocaleString('pl-PL')}` : 'Brak daty aktualizacji — nie podłączono danych.'}</small></div></div><div className="social-total"><span>ŁĄCZNIE NA CZTERECH PLATFORMACH</span><strong>{stats?.every(s => s.followers !== null) ? stats.reduce((sum, s) => sum + (s.followers || 0), 0).toLocaleString('pl-PL') : '—'}</strong><p>Suma obserwacji i subskrypcji.<br />Nie liczba unikalnych osób. Daty odczytów mogą się różnić.</p></div></section>
+    } }} onClick={() => setSelected(i)}><span className="platform-number">0{i + 1}</span><SocialGlyph platform={p}/><span className="platform-name">{p}</span><ArrowUpRight /></button>)}</div><div className="social-display" role="tabpanel" id="social-panel" aria-labelledby={`tab-${selected}`}><div className="social-display-head"><SocialGlyph platform={platforms[selected]}/><span className="status-pill"><i />{current?.status === 'live' ? 'DANE Z API' : current?.status === 'manual' ? 'ZWERYFIKOWANE RĘCZNIE' : current?.status === 'stale' ? 'DANE NIEAKTUALNE' : current?.status === 'unavailable' ? 'API NIEDOSTĘPNE' : current?.status === 'partial' ? 'DANE CZĘŚCIOWE' : 'PODŁĄCZ API'}</span></div><div className="social-number" key={selected}>{current?.followers != null ? <AnimatedNumber value={current.followers}/> : statsError ? '—' : !stats ? '…' : '— —'}</div><h3>{platforms[selected] === 'YouTube' ? 'subskrypcje' : 'obserwacje'} na {platforms[selected]}</h3><p>{statsError ? 'Nie udało się pobrać aktualnych statystyk.' : current?.followers != null ? 'Liczba pobrana z oficjalnego API platformy.' : 'Link działa już teraz. Licznik pojawi się po podłączeniu klucza API.'}</p>{current?.views != null && <div className="platform-views"><span>WYŚWIETLENIA</span><strong><AnimatedNumber value={current.views}/></strong><small>{current.viewsScope}</small></div>}<a className="social-profile-link" href={profiles[platforms[selected]]} target="_blank" rel="noreferrer">Otwórz {platforms[selected]} <ArrowUpRight size={19}/></a>{current?.note && <p>{current.note}</p>}<small>{current?.updatedAt ? `Aktualizacja: ${new Date(current.updatedAt).toLocaleString('pl-PL')}` : 'Statystyki czekają na konfigurację API.'}</small></div></div><div className="views-total-card"><div className="views-total-copy"><span className="live-kicker"><i/> ŁĄCZNE WYŚWIETLENIA / LIVE</span><strong>{totalViews !== null ? <AnimatedNumber value={totalViews}/> : stats ? '— —' : '…'}</strong><p>Suma wyświetleń z platform, które udostępniają dane przez podłączone API. Aktualizacja automatyczna co 5 minut.</p></div><div className="views-total-side"><span className="sources-count">ŹRÓDŁA {viewSources}/4</span><button className="refresh-stats" type="button" disabled={statsRefreshing} onClick={() => loadStats(false)}>{statsRefreshing ? <><LoaderCircle className="spin" size={17}/> ODŚWIEŻAM</> : <>ODŚWIEŻ DANE <ArrowRight size={17}/></>}</button><span className="followers-total">ŁĄCZNE OBSERWACJE {totalFollowers !== null ? totalFollowers.toLocaleString('pl-PL') : '—'}</span></div></div><div className="social-links-row">{platforms.map(p => <a key={p} href={profiles[p]} target="_blank" rel="noreferrer"><SocialGlyph platform={p}/><span>{p}</span><ArrowUpRight size={16}/></a>)}</div></section>
  <section className="contact section" id="kontakt"><div className="contact-intro"><span className="eyebrow">03 / ZRÓBMY COŚ NIEPOWAŻNEGO</span><h2>DOBRY<br />POMYSŁ?<br /><span>DAWAJ GO.</span></h2><p>Współpraca z marką, wspólny film<br />albo po prostu coś do powiedzenia.<br />Tu jest na to miejsce.</p><span className="contact-arrow" aria-hidden="true">↗</span></div><form onSubmit={send} className="contact-form"><div className="form-notice">PODGLĄD / Wysyłka czeka na konfigurację poczty.</div><div className="form-row"><label>Imię lub nazwa firmy<input name="name" required maxLength={120} autoComplete="organization" placeholder="Jak się nazywasz?"/></label><label>Adres e-mail<input name="email" type="email" required maxLength={254} autoComplete="email" placeholder="twoj@email.pl"/></label></div><label>O czym pogadamy?<select name="subject" required defaultValue=""><option value="" disabled>Wybierz temat</option><option>Współpraca z marką</option><option>Pytanie o koszulkę</option><option>Inna sprawa</option></select></label><label>Twoja wiadomość<textarea name="message" required minLength={10} maxLength={5000} rows={4} placeholder="Nie musi być poważnie. Wystarczy konkretnie."/></label><div className="honeypot" aria-hidden="true"><label>Strona WWW<input name="website" tabIndex={-1} autoComplete="off"/></label></div><p className="privacy-note">Podane dane służą wyłącznie obsłudze zapytania. Informacje o administratorze i zasadach przetwarzania wymagają uzupełnienia przed aktywacją formularza. <a href="/prywatnosc">Polityka prywatności — szkic</a>.</p><button className="button dark full" disabled={formState === 'sending'} type="submit">{formState === 'sending' ? <>Wysyłanie… <LoaderCircle className="spin"/></> : <>Wyślij wiadomość <ArrowUpRight /></>}</button><p role="status" className={`form-feedback ${formState}`}>{formMessage}</p></form></section>
  <section className="faq section" id="faq"><div><span className="eyebrow">04 / ZANIM ZAPYTASZ</span><h2>BEZ GŁUPICH<br />PYTAŃ.</h2><p>Odpowiedzi całkiem na serio.</p></div><div className="faq-list">{faq.map(([q, a], i) => <details key={q}><summary><span><small>0{i + 1}</small>{q}</span><Plus size={21}/></summary><p>{a}</p></details>)}</div></section>
  </main><footer><div className="footer-top"><a href="/" className="brand"><Mark /><span>ULICZNY<br />ABSURD</span></a><p>Życie jest za krótkie<br />na nudne koszulki.</p><nav aria-label="Nawigacja stopki"><a href="#kolekcja">Koszulki</a><a href="#spolecznosc">Nasz internet</a><a href="#kontakt">Kontakt</a></nav><nav aria-label="Informacje prawne"><a href="/regulamin">Regulamin — szkic</a><a href="/prywatnosc">Prywatność — szkic</a><a href="#faq">Pytania i odpowiedzi</a></nav></div><div className="footer-wordmark" aria-hidden="true">ULICZNY ABSURD</div><div className="footer-bottom"><span>© {new Date().getFullYear()} ULICZNY ABSURD</span><span>ZERO POWAGI. DUŻO CHARAKTERU.</span><a href="#main">DO GÓRY ↑</a></div></footer>

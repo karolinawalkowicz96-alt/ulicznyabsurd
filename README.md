@@ -69,3 +69,8 @@ To warstwa integracji, nie ukończony system obsługi zamówień: brak panelu re
 ## Ograniczenia weryfikacji
 
 Zobacz `docs/QA.md`. Natywny build Next.js (Turbopack i Webpack) blokuje ograniczenie kontenera `ENOENT uv_resident_set_memory`; musi zostać powtórzony w Vercel. Nie deklarujemy testów browserowych, płatności, dostawy wiadomości ani autoryzacji API, których nie wykonano. Środowisko Sites nie udostępniało skilla control-browser. Wersja Next dostarczona przez bazę środowiska to 16.3.4; próba aktualizacji do wykrytej w rejestrze 16.4.2 została odrzucona przez politykę minimalnego wieku pakietów (7 dni). Nie obchodzono tej polityki. Przed publicznym startem zastosuj aktualny dopuszczony patch bezpieczeństwa i powtórz build/testy.
+
+
+## Social media — Uliczny Absurd
+
+Profile links are already wired to Facebook, Instagram, YouTube and TikTok. The `Nasz kawałek internetu` section refreshes automatically every 5 minutes and also has a manual refresh button. Live counters require the matching API credentials from `.env.example`. YouTube exposes a channel-wide view total; TikTok totals public-video `view_count` values from the Display API. Facebook/Instagram follower counters use Meta Graph API; a comparable all-time account view total is not exposed by the same basic profile endpoints, so the aggregate view number only sums platforms that actually returned a verified `views` value.
