@@ -1,7 +1,3 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
-  /* config options here */
-};
-
+import type { NextConfig } from 'next';
+const nextConfig:NextConfig={poweredByHeader:false,async headers(){return [{source:'/:path*',headers:[{key:'X-Content-Type-Options',value:'nosniff'},{key:'Referrer-Policy',value:'no-referrer'},{key:'X-Frame-Options',value:'DENY'},{key:'Permissions-Policy',value:'camera=(), microphone=(), geolocation=()'}]},{source:'/admin/:path*',headers:[{key:'X-Robots-Tag',value:'noindex, nofollow'},{key:'Cache-Control',value:'no-store'}]},{source:'/zamowienie',headers:[{key:'X-Robots-Tag',value:'noindex, nofollow'},{key:'Cache-Control',value:'no-store'}]}]},async redirects(){return [{source:'/:path*',has:[{type:'host',value:'ulicznyabsurd.pl'}],destination:'https://www.ulicznyabsurd.pl/:path*',permanent:true}]}};
 export default nextConfig;

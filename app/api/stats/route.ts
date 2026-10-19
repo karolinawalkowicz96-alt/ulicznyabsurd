@@ -1,20 +1,3 @@
-import { allSnapshots } from '@/lib/social';
-
-export const dynamic = 'force-dynamic';
-
-export async function GET() {
-    const platforms = await allSnapshots();
-    const viewPlatforms = platforms.filter(p => p.views !== null);
-    const aggregateViews = viewPlatforms.length
-        ? viewPlatforms.reduce((sum, p) => sum + (p.views || 0), 0)
-        : null;
-
-    return Response.json({
-        platforms,
-        aggregateViews,
-        aggregateViewSources: viewPlatforms.length,
-        totalSources: platforms.length,
-    }, {
-        headers: { 'Cache-Control': 'no-store, max-age=0' },
-    });
-}
+import { getCatalog } from '@/lib/shop-service';
+export const dynamic='force-dynamic';
+export async function GET(){try{const {settings:s}=await getCatalog();return Response.json({platforms:[['Facebook',s.facebook],['Instagram',s.instagram],['YouTube',s.youtube],['TikTok',s.tiktok]].map(([platform,followers])=>({platform,followers,views:null,viewsScope:null,updatedAt:s.statsUpdated,status:'manual',note:'Statystyki aktualizowane ręcznie przez Uliczny Absurd.'})),aggregateViews:s.views,totalFollowers:s.facebook+s.instagram+s.youtube+s.tiktok},{headers:{'Cache-Control':'no-store'}});}catch{return Response.json({error:'Nie udało się pobrać statystyk.'},{status:503});}}
