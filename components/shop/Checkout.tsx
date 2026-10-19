@@ -9,7 +9,7 @@ import type { ShopOrder } from '@/lib/shop-types';
 const statusLabel:Record<string,string>={new:'przyjęte',confirmed:'potwierdzone',processing:'w realizacji',packed:'spakowane',shipped:'wysłane',delivered:'doręczone',completed:'zakończone',cancelled:'anulowane',returned:'zwrócone',pending:'oczekuje',paid:'opłacone',unpaid:'nieopłacone',failed:'nieudane'};
 
 export default function Checkout(){
-  const {items,setItems,catalog,setCatalog,ready}=useShop();
+  const {items,setItems,catalog,setCatalog,ready,catalogReady}=useShop();
   const settings=catalog.settings;
   const test=Boolean(settings.testMode);
   const courierActive=test||Boolean(settings.courierActive);
@@ -54,9 +54,9 @@ export default function Checkout(){
   {loadingOrder?<p role="status">Wczytujemy zamówienie…</p>:order?<Confirmation order={order} busy={busy} retryPayment={retryPayment}/>:<>
     <div className="checkout-heading"><div><h1>JESZCZE CHWILA.<br/>I NOSISZ ABSURD.</h1><p>Sprawdź dane, wybierz dostawę i płatność. Przed złożeniem zamówienia zobaczysz pełną kwotę.</p></div>{test&&<span className="checkout-test-badge">TRYB TESTOWY</span>}</div>
     {test&&<p className="form-notice">To środowisko testowe. Zamówienia nie są realizowane, płatności produkcyjne nie powinny być tu używane.</p>}
-    {!catalog.configured&&<p className="error">Sklep oczekuje na konfigurację bazy danych. Zamówienia są tymczasowo niedostępne.</p>}
-    {!test&&!Boolean(settings.salesActive)&&<p className="error">Sprzedaż nie została jeszcze uruchomiona.</p>}
-    {!ready?<p>Wczytywanie koszyka…</p>:!items.length?<div className="checkout-empty"><ShoppingBag size={46}/><h2>Koszyk jest pusty.</h2><Link className="button dark" href="/#kolekcja">Wybierz koszulkę</Link></div>:<div className="shop-checkout-grid">
+    {catalogReady&&!catalog.configured&&<p className="error">Sklep oczekuje na konfigurację bazy danych. Zamówienia są tymczasowo niedostępne.</p>}
+    {catalogReady&&!test&&!Boolean(settings.salesActive)&&<p className="error">Sprzedaż nie została jeszcze uruchomiona.</p>}
+    {!ready||!catalogReady?<p role="status">Wczytywanie sklepu i koszyka…</p>:!items.length?<div className="checkout-empty"><ShoppingBag size={46}/><h2>Koszyk jest pusty.</h2><Link className="button dark" href="/#kolekcja">Wybierz koszulkę</Link></div>:<div className="shop-checkout-grid">
       <form className="checkout-form" onSubmit={submit}>
         <section className="checkout-card"><div className="checkout-card-title"><span>01</span><div><h2>Dane do dostawy</h2><p>Dostawy na start realizujemy wyłącznie w Polsce.</p></div></div>
           <div className="form-row"><label>Imię<input name="firstName" required minLength={2} maxLength={80} autoComplete="given-name"/></label><label>Nazwisko<input name="lastName" required minLength={2} maxLength={80} autoComplete="family-name"/></label></div>
