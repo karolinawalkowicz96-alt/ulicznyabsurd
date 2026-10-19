@@ -1,3 +1,3 @@
-'use client';
-import {useEffect,useState} from 'react';
-export default function Page(){const [cancel,setCancel]=useState(false);useEffect(()=>setCancel(new URLSearchParams(location.search).get('status')==='anulowano'),[]);return <main className="legal"><a href="/">← Wróć do sklepu</a><h1>{cancel?'Płatność przerwana.':'Powrót z płatności.'}</h1><p>{cancel?'Nie pokazujemy potwierdzenia zakupu. Koszyk pozostaje zapisany; możesz wrócić i ponowić próbę.':'Sam powrót na stronę nie potwierdza zapłaty. Status zamówienia zmienia wyłącznie zweryfikowane zdarzenie operatora. W razie wątpliwości skontaktuj się ze sklepem po uruchomieniu kontaktu.'}</p><p>Wersja demonstracyjna nie przyjmuje płatności.</p></main>;}
+import Checkout from '@/components/shop/Checkout';
+export const metadata={title:'Zamówienie',robots:{index:false,follow:false}};
+export default function Page(){return <Checkout/>}
