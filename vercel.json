@@ -1,1 +1,1 @@
-{"framework":"nextjs","installCommand":"npm ci","buildCommand":"node --import tsx scripts/bootstrap-shop.ts && npm run build","crons":[{"path":"/api/jobs/mail","schedule":"0 8 * * *"}]}
+{"framework":"nextjs","installCommand":"npm ci","buildCommand":"npm run build","crons":[{"path":"/api/jobs/mail","schedule":"0 8 * * *"}]}
