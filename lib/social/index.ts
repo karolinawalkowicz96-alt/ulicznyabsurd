@@ -3,7 +3,7 @@ import { tiktok } from './tiktok';
 import { facebook } from './facebook';
 import { instagram } from './instagram';
 import { empty, type Adapter, type SocialSnapshot } from './types';
-import { hasRedis, redis } from '../server';
+import { hasRedis, redis } from './redis';
 
 type MemoryEntry = { value: SocialSnapshot; expires: number };
 const globalSocial = globalThis as typeof globalThis & { __uaSocialCache?: Map<string, MemoryEntry> };
