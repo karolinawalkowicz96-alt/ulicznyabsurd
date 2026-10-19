@@ -12,7 +12,6 @@ export default function CampaignHero() {
         <p>Filmy, które zostają w głowie.<br />Koszulki, które mówią za Ciebie.</p>
         <div className="campaign-actions">
           <a className="button dark" href="#kolekcja">Zobacz koszulki <ArrowUpRight size={24} /></a>
-          <a className="text-link" href="#spolecznosc">Poznaj nasz internet <ArrowUpRight size={21} /></a>
         </div>
         <div className="campaign-notes"><span><Smile size={30} />Oryginalne<br />wzory</span><span><Shirt size={30} />Dla pozytywnie<br />zakręconych</span></div>
       </div>
