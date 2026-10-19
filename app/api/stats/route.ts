@@ -1,0 +1,3 @@
+import { getCatalog } from '@/lib/shop-service';
+export const dynamic='force-dynamic';
+export async function GET(){try{const {settings:s}=await getCatalog();return Response.json({platforms:[['Facebook',s.facebook],['Instagram',s.instagram],['YouTube',s.youtube],['TikTok',s.tiktok]].map(([platform,followers])=>({platform,followers,views:null,viewsScope:null,updatedAt:s.statsUpdated,status:'manual',note:null})),aggregateViews:s.views,totalFollowers:s.facebook+s.instagram+s.youtube+s.tiktok},{headers:{'Cache-Control':'no-store'}});}catch{return Response.json({error:'Nie udało się pobrać statystyk.'},{status:503});}}
