@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { ArrowUpRight, X, Plus, Menu, LoaderCircle } from 'lucide-react';
 import CampaignHero from './CampaignHero';
 import Eyes from './Eyes';
@@ -9,9 +9,28 @@ import { BuyPanel, CartButton, useShop, priceOf, type Catalog } from '@/componen
 import { faq, platforms, profiles } from '@/lib/content';
 import type { SocialSnapshot } from '@/lib/social/types';
 function Mark() { return <img src="/logo-texture.webp" alt="Uliczny Absurd" width="56" height="56" className="mark"/>; }
+type CSSVars = CSSProperties & Record<`--${string}`, string | number>;
 function MoneyRain() {
-    const notes = ['💸','💵','💸','💵','💸','💸','💵','💸','💵','💸','💵','💸','💸','💵'];
-    return <div className="money-rain" aria-hidden="true">{notes.map((emoji, i) => <span key={i}>{emoji}</span>)}</div>;
+    const drops = [
+        ['💸',2,7.8,.05,28,2.6,-14],['💵',6,8.7,.65,34,3.2,18],['💸',10,7.2,1.15,24,2.3,12],
+        ['💵',14,9.1,.22,38,3.6,-16],['💸',18,8.2,1.7,31,2.9,20],['💸',22,7.5,.82,25,2.5,-12],
+        ['💵',26,9.4,1.35,42,3.8,17],['💸',30,8.5,.12,29,2.7,-18],['💵',34,7.7,2.05,36,3.3,14],
+        ['💸',38,9.0,.48,27,2.4,-15],['💵',42,8.1,1.55,40,3.5,19],['💸',46,7.3,.95,30,2.8,-13],
+        ['💸',50,9.3,.28,35,3.1,16],['💵',54,8.4,1.88,26,2.6,-17],['💸',58,7.6,.7,39,3.7,13],
+        ['💵',62,8.9,1.22,28,2.5,-19],['💸',66,7.9,.18,33,3.0,15],['💵',70,9.5,1.62,41,3.9,-14],
+        ['💸',74,8.3,.55,25,2.4,18],['💸',78,7.4,2.18,37,3.4,-16],['💵',82,9.2,1.02,32,2.9,14],
+        ['💸',86,8.0,.34,43,3.8,-18],['💵',90,7.6,1.45,27,2.6,17],['💸',94,8.8,.78,35,3.2,-13],
+        ['💸',97,9.6,1.95,29,2.7,19],['💵',4,8.6,2.35,38,3.6,-15],['💸',16,9.3,2.6,24,2.3,16],
+        ['💵',28,8.0,2.85,34,3.0,-17],['💸',40,9.5,2.45,42,3.9,13],['💵',52,8.4,2.72,30,2.8,-19],
+        ['💸',64,9.0,2.3,36,3.4,15],['💵',76,8.2,2.58,26,2.5,-14],['💸',88,9.4,2.9,40,3.7,18],
+    ] as const;
+    return <div className="money-rain" aria-hidden="true">{drops.map(([emoji,left,duration,delay,sway,swayTime,tilt], i) =>
+        <span className="money-drop" key={i} style={{left:`${left}%`,animationDuration:`${duration}s`,animationDelay:`${delay}s`}}>
+            <i className="money-sway" style={{'--money-sway-from':`${Math.round(sway * -.55)}px`,'--money-sway-to':`${sway}px`,'--money-sway-time':`${swayTime}s`} as CSSVars}>
+                <b className="money-note" style={{'--money-tilt-from':`${Math.round(tilt * -.6)}deg`,'--money-tilt-to':`${tilt}deg`,'--money-flutter-delay':`${-(i % 7) * .27}s`} as CSSVars}>{emoji}</b>
+            </i>
+        </span>
+    )}</div>;
 }
 function SocialGlyph({ platform }: { platform: (typeof platforms)[number] }) {
     if (platform === 'Facebook') return <span className="social-glyph social-glyph-facebook" aria-hidden="true"><svg viewBox="0 0 64 64"><path d="M37 56V34h8l2-9H37v-5c0-3 2-5 6-5h5V7c-2-1-6-1-10-1-10 0-16 6-16 15v4h-7v9h7v22z" fill="currentColor"/></svg></span>;
