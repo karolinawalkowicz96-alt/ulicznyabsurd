@@ -9,6 +9,10 @@ import { BuyPanel, CartButton, useShop, priceOf, type Catalog } from '@/componen
 import { faq, platforms, profiles } from '@/lib/content';
 import type { SocialSnapshot } from '@/lib/social/types';
 function Mark() { return <img src="/logo-texture.webp" alt="Uliczny Absurd" width="56" height="56" className="mark"/>; }
+function MoneyRain() {
+    const notes = ['💸','💵','💸','💵','💸','💸','💵','💸','💵','💸','💵','💸','💸','💵'];
+    return <div className="money-rain" aria-hidden="true">{notes.map((emoji, i) => <span key={i}>{emoji}</span>)}</div>;
+}
 function SocialGlyph({ platform }: { platform: (typeof platforms)[number] }) {
     if (platform === 'Facebook') return <span className="social-glyph social-glyph-facebook" aria-hidden="true"><svg viewBox="0 0 64 64"><path d="M37 56V34h8l2-9H37v-5c0-3 2-5 6-5h5V7c-2-1-6-1-10-1-10 0-16 6-16 15v4h-7v9h7v22z" fill="currentColor"/></svg></span>;
     if (platform === 'Instagram') return <span className="social-glyph social-glyph-instagram" aria-hidden="true"><svg viewBox="0 0 64 64"><rect x="12" y="12" width="40" height="40" rx="12" fill="none" stroke="currentColor" strokeWidth="5"/><circle cx="32" cy="32" r="10" fill="none" stroke="currentColor" strokeWidth="5"/><circle cx="45" cy="19" r="3.5" fill="currentColor"/></svg></span>;
@@ -134,7 +138,7 @@ export default function Store({ initialProduct = false, initialCatalog, contactE
     const current = stats?.[selected];
     const activeShowcase = displayProducts[showcaseIndex] || displayProducts[0] || showcaseProducts[0];
     const activeProduct=catalog.products.find(p=>p.id===activeShowcase.id);
-    return <><a href="#main" className="skip-link">Przejdź do treści</a><div className="preview-bar">ULICZNY ABSURD <span>•</span> {catalog.settings.testMode ? 'TRYB TESTOWY — zamówienia nie są realizowane' : 'Koszulki z charakterem'}</div>
+    return <><MoneyRain/><a href="#main" className="skip-link">Przejdź do treści</a><div className="preview-bar">ULICZNY ABSURD <span>•</span> {catalog.settings.testMode ? 'TRYB TESTOWY — zamówienia nie są realizowane' : 'Koszulki z charakterem'}</div>
  <header className="header"><Link href="/" className="brand" aria-label="Uliczny Absurd — strona główna"><Mark /><span>ULICZNY<br />ABSURD</span></Link><nav aria-label="Główna nawigacja"><a href="#kolekcja">KOSZULKI</a><a href="#spolecznosc">NASZ INTERNET</a><a href="#kontakt">WSPÓŁPRACA <ArrowUpRight size={16}/></a></nav><div className="header-actions"><CartButton/><button className="icon-button mobile-menu" aria-label="Otwórz menu" onClick={() => setMenu(true)}><Menu /></button></div></header>
  <main id="main"><CampaignHero />
  <div className="ticker" aria-hidden="true"><div>{Array.from({ length: 4 }, (_, i) => <span key={i}>NIE WSZYSTKO MUSI MIEĆ SENS <b className="ticker-emoji">🔥</b> ALE MOŻE MIEĆ DOBRY NADRUK <b className="ticker-emoji">🔥</b> </span>)}</div></div>

@@ -194,3 +194,57 @@ footer{border-radius:40px 40px 0 0}
 @media(prefers-reduced-motion:reduce){
   .footer-wordmark,.footer-wordmark:hover{animation:none;transform:none}
 }
+
+/* Entry easter egg: brief falling banknotes on the home page. */
+.money-rain{
+  position:fixed;
+  inset:0;
+  z-index:140;
+  overflow:hidden;
+  pointer-events:none;
+  user-select:none;
+  contain:layout paint;
+}
+.money-rain span{
+  position:absolute;
+  top:-14vh;
+  left:50%;
+  display:block;
+  font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif;
+  font-size:clamp(28px,3vw,48px);
+  line-height:1;
+  filter:drop-shadow(0 5px 2px rgba(24,24,22,.16));
+  opacity:0;
+  will-change:transform,opacity;
+  animation:money-fall 2.7s cubic-bezier(.18,.72,.3,1) forwards;
+}
+.money-rain span:nth-child(1){left:3%;animation-delay:.03s;animation-duration:2.75s;--money-x:34px;--money-r:240deg}
+.money-rain span:nth-child(2){left:11%;animation-delay:.3s;animation-duration:2.35s;--money-x:-22px;--money-r:-190deg}
+.money-rain span:nth-child(3){left:19%;animation-delay:.08s;animation-duration:2.95s;--money-x:52px;--money-r:310deg}
+.money-rain span:nth-child(4){left:28%;animation-delay:.5s;animation-duration:2.25s;--money-x:-38px;--money-r:-260deg}
+.money-rain span:nth-child(5){left:36%;animation-delay:.18s;animation-duration:2.65s;--money-x:28px;--money-r:210deg}
+.money-rain span:nth-child(6){left:44%;animation-delay:.68s;animation-duration:2.15s;--money-x:-48px;--money-r:-330deg}
+.money-rain span:nth-child(7){left:51%;animation-delay:.02s;animation-duration:2.9s;--money-x:35px;--money-r:290deg}
+.money-rain span:nth-child(8){left:59%;animation-delay:.38s;animation-duration:2.5s;--money-x:-30px;--money-r:-215deg}
+.money-rain span:nth-child(9){left:66%;animation-delay:.14s;animation-duration:2.72s;--money-x:46px;--money-r:270deg}
+.money-rain span:nth-child(10){left:73%;animation-delay:.62s;animation-duration:2.15s;--money-x:-42px;--money-r:-300deg}
+.money-rain span:nth-child(11){left:80%;animation-delay:.22s;animation-duration:2.62s;--money-x:28px;--money-r:245deg}
+.money-rain span:nth-child(12){left:87%;animation-delay:.43s;animation-duration:2.38s;--money-x:-34px;--money-r:-230deg}
+.money-rain span:nth-child(13){left:93%;animation-delay:.09s;animation-duration:2.85s;--money-x:-42px;--money-r:305deg}
+.money-rain span:nth-child(14){left:97%;animation-delay:.55s;animation-duration:2.25s;--money-x:-58px;--money-r:-275deg}
+@keyframes money-fall{
+  0%{opacity:0;transform:translate3d(0,-8vh,0) rotate(0deg) scale(.72)}
+  10%{opacity:1}
+  82%{opacity:1}
+  100%{opacity:0;transform:translate3d(var(--money-x),118vh,0) rotate(var(--money-r)) scale(1.05)}
+}
+@media(max-width:760px){
+  .money-rain span{font-size:clamp(25px,8vw,38px)}
+  .money-rain span:nth-child(2),
+  .money-rain span:nth-child(6),
+  .money-rain span:nth-child(10),
+  .money-rain span:nth-child(14){display:none}
+}
+@media(prefers-reduced-motion:reduce){
+  .money-rain{display:none}
+}
