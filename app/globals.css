@@ -195,7 +195,7 @@ footer{border-radius:40px 40px 0 0}
   .footer-wordmark,.footer-wordmark:hover{animation:none;transform:none}
 }
 
-/* Entry easter egg: brief falling banknotes on the home page. */
+/* Entry easter egg: slower falling banknotes with a soft bottom fade. */
 .money-rain{
   position:fixed;
   inset:0;
@@ -204,39 +204,44 @@ footer{border-radius:40px 40px 0 0}
   pointer-events:none;
   user-select:none;
   contain:layout paint;
+  -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 86%,rgba(0,0,0,.72) 92%,transparent 100%);
+  mask-image:linear-gradient(to bottom,#000 0%,#000 86%,rgba(0,0,0,.72) 92%,transparent 100%);
 }
 .money-rain span{
   position:absolute;
-  top:-14vh;
+  top:-20vh;
   left:50%;
   display:block;
   font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif;
   font-size:clamp(28px,3vw,48px);
   line-height:1;
-  filter:drop-shadow(0 5px 2px rgba(24,24,22,.16));
+  filter:drop-shadow(0 6px 3px rgba(24,24,22,.14));
   opacity:0;
   will-change:transform,opacity;
-  animation:money-fall 2.7s cubic-bezier(.18,.72,.3,1) forwards;
+  animation:money-fall 6.2s cubic-bezier(.24,.05,.68,.98) forwards;
 }
-.money-rain span:nth-child(1){left:3%;animation-delay:.03s;animation-duration:2.75s;--money-x:34px;--money-r:240deg}
-.money-rain span:nth-child(2){left:11%;animation-delay:.3s;animation-duration:2.35s;--money-x:-22px;--money-r:-190deg}
-.money-rain span:nth-child(3){left:19%;animation-delay:.08s;animation-duration:2.95s;--money-x:52px;--money-r:310deg}
-.money-rain span:nth-child(4){left:28%;animation-delay:.5s;animation-duration:2.25s;--money-x:-38px;--money-r:-260deg}
-.money-rain span:nth-child(5){left:36%;animation-delay:.18s;animation-duration:2.65s;--money-x:28px;--money-r:210deg}
-.money-rain span:nth-child(6){left:44%;animation-delay:.68s;animation-duration:2.15s;--money-x:-48px;--money-r:-330deg}
-.money-rain span:nth-child(7){left:51%;animation-delay:.02s;animation-duration:2.9s;--money-x:35px;--money-r:290deg}
-.money-rain span:nth-child(8){left:59%;animation-delay:.38s;animation-duration:2.5s;--money-x:-30px;--money-r:-215deg}
-.money-rain span:nth-child(9){left:66%;animation-delay:.14s;animation-duration:2.72s;--money-x:46px;--money-r:270deg}
-.money-rain span:nth-child(10){left:73%;animation-delay:.62s;animation-duration:2.15s;--money-x:-42px;--money-r:-300deg}
-.money-rain span:nth-child(11){left:80%;animation-delay:.22s;animation-duration:2.62s;--money-x:28px;--money-r:245deg}
-.money-rain span:nth-child(12){left:87%;animation-delay:.43s;animation-duration:2.38s;--money-x:-34px;--money-r:-230deg}
-.money-rain span:nth-child(13){left:93%;animation-delay:.09s;animation-duration:2.85s;--money-x:-42px;--money-r:305deg}
-.money-rain span:nth-child(14){left:97%;animation-delay:.55s;animation-duration:2.25s;--money-x:-58px;--money-r:-275deg}
+.money-rain span:nth-child(1){left:3%;animation-delay:.05s;animation-duration:6.5s;--money-x:42px;--money-mid:-18px;--money-r:280deg}
+.money-rain span:nth-child(2){left:11%;animation-delay:.5s;animation-duration:5.9s;--money-x:-30px;--money-mid:16px;--money-r:-240deg}
+.money-rain span:nth-child(3){left:19%;animation-delay:.12s;animation-duration:6.9s;--money-x:58px;--money-mid:-22px;--money-r:350deg}
+.money-rain span:nth-child(4){left:28%;animation-delay:.85s;animation-duration:5.7s;--money-x:-46px;--money-mid:20px;--money-r:-315deg}
+.money-rain span:nth-child(5){left:36%;animation-delay:.3s;animation-duration:6.3s;--money-x:34px;--money-mid:-14px;--money-r:265deg}
+.money-rain span:nth-child(6){left:44%;animation-delay:1.05s;animation-duration:5.8s;--money-x:-54px;--money-mid:24px;--money-r:-370deg}
+.money-rain span:nth-child(7){left:51%;animation-delay:.02s;animation-duration:7.1s;--money-x:40px;--money-mid:-20px;--money-r:330deg}
+.money-rain span:nth-child(8){left:59%;animation-delay:.62s;animation-duration:6.1s;--money-x:-38px;--money-mid:18px;--money-r:-275deg}
+.money-rain span:nth-child(9){left:66%;animation-delay:.25s;animation-duration:6.6s;--money-x:52px;--money-mid:-24px;--money-r:315deg}
+.money-rain span:nth-child(10){left:73%;animation-delay:1s;animation-duration:5.8s;--money-x:-48px;--money-mid:22px;--money-r:-345deg}
+.money-rain span:nth-child(11){left:80%;animation-delay:.4s;animation-duration:6.4s;--money-x:36px;--money-mid:-16px;--money-r:295deg}
+.money-rain span:nth-child(12){left:87%;animation-delay:.75s;animation-duration:6s;--money-x:-42px;--money-mid:19px;--money-r:-290deg}
+.money-rain span:nth-child(13){left:93%;animation-delay:.16s;animation-duration:6.8s;--money-x:-50px;--money-mid:23px;--money-r:340deg}
+.money-rain span:nth-child(14){left:97%;animation-delay:.92s;animation-duration:5.9s;--money-x:-66px;--money-mid:28px;--money-r:-325deg}
 @keyframes money-fall{
-  0%{opacity:0;transform:translate3d(0,-8vh,0) rotate(0deg) scale(.72)}
-  10%{opacity:1}
-  82%{opacity:1}
-  100%{opacity:0;transform:translate3d(var(--money-x),118vh,0) rotate(var(--money-r)) scale(1.05)}
+  0%{opacity:0;transform:translate3d(0,-14vh,0) rotate(-18deg) scale(.82)}
+  8%{opacity:1}
+  24%{transform:translate3d(var(--money-mid),14vh,0) rotate(38deg) scale(.9)}
+  50%{transform:translate3d(0,48vh,0) rotate(126deg) scale(.96)}
+  74%{transform:translate3d(var(--money-x),82vh,0) rotate(215deg) scale(1)}
+  90%{opacity:1;transform:translate3d(var(--money-mid),108vh,0) rotate(275deg) scale(1.02)}
+  100%{opacity:0;transform:translate3d(var(--money-x),132vh,0) rotate(var(--money-r)) scale(1.05)}
 }
 @media(max-width:760px){
   .money-rain span{font-size:clamp(25px,8vw,38px)}
