@@ -12,17 +12,17 @@ function Mark() { return <img src="/logo-texture.webp" alt="Uliczny Absurd" widt
 type CSSVars = CSSProperties & Record<`--${string}`, string | number>;
 function MoneyRain() {
     const drops = [
-        ['💸',2,7.02,.05,28,2.6,-14],['💵',6,7.83,.65,34,3.2,18],['💸',10,6.48,1.15,24,2.3,12],
-        ['💵',14,8.19,.22,38,3.6,-16],['💸',18,7.38,1.7,31,2.9,20],['💸',22,6.75,.82,25,2.5,-12],
-        ['💵',26,8.46,1.35,42,3.8,17],['💸',30,7.65,.12,29,2.7,-18],['💵',34,6.93,2.05,36,3.3,14],
-        ['💸',38,8.1,.48,27,2.4,-15],['💵',42,7.29,1.55,40,3.5,19],['💸',46,6.57,.95,30,2.8,-13],
-        ['💸',50,8.37,.28,35,3.1,16],['💵',54,7.56,1.88,26,2.6,-17],['💸',58,6.84,.7,39,3.7,13],
-        ['💵',62,8.01,1.22,28,2.5,-19],['💸',66,7.11,.18,33,3.0,15],['💵',70,8.55,1.62,41,3.9,-14],
-        ['💸',74,7.47,.55,25,2.4,18],['💸',78,6.66,2.18,37,3.4,-16],['💵',82,8.28,1.02,32,2.9,14],
-        ['💸',86,7.2,.34,43,3.8,-18],['💵',90,6.84,1.45,27,2.6,17],['💸',94,7.92,.78,35,3.2,-13],
-        ['💸',97,8.64,1.95,29,2.7,19],['💵',4,7.74,2.35,38,3.6,-15],['💸',16,8.37,2.6,24,2.3,16],
-        ['💵',28,7.2,2.85,34,3.0,-17],['💸',40,8.55,2.45,42,3.9,13],['💵',52,7.56,2.72,30,2.8,-19],
-        ['💸',64,8.1,2.3,36,3.4,15],['💵',76,7.38,2.58,26,2.5,-14],['💸',88,8.46,2.9,40,3.7,18],
+        ['💸',2,3.85,.05,28,2.6,-14],['💵',6,4.15,.65,34,3.2,18],['💸',10,3.7,1.15,24,2.3,12],
+        ['💵',14,4.25,.22,38,3.6,-16],['💸',18,3.95,1.7,31,2.9,20],['💸',22,3.8,.82,25,2.5,-12],
+        ['💵',26,4.3,1.35,42,3.8,17],['💸',30,4.05,.12,29,2.7,-18],['💵',34,3.9,2.05,36,3.3,14],
+        ['💸',38,4.2,.48,27,2.4,-15],['💵',42,3.9,1.55,40,3.5,19],['💸',46,3.75,.95,30,2.8,-13],
+        ['💸',50,4.25,.28,35,3.1,16],['💵',54,4,1.88,26,2.6,-17],['💸',58,3.8,.7,39,3.7,13],
+        ['💵',62,4.15,1.22,28,2.5,-19],['💸',66,3.9,.18,33,3.0,15],['💵',70,4.3,1.62,41,3.9,-14],
+        ['💸',74,4,.55,25,2.4,18],['💸',78,3.75,2.18,37,3.4,-16],['💵',82,4.2,1.02,32,2.9,14],
+        ['💸',86,3.95,.34,43,3.8,-18],['💵',90,3.8,1.45,27,2.6,17],['💸',94,4.1,.78,35,3.2,-13],
+        ['💸',97,4.3,1.95,29,2.7,19],['💵',4,4.05,2.35,38,3.6,-15],['💸',16,4.25,2.6,24,2.3,16],
+        ['💵',28,3.9,2.85,34,3.0,-17],['💸',40,4.3,2.45,42,3.9,13],['💵',52,4,2.72,30,2.8,-19],
+        ['💸',64,4.15,2.3,36,3.4,15],['💵',76,3.95,2.58,26,2.5,-14],['💸',88,4.25,2.9,40,3.7,18],
     ] as const;
     return <div className="money-rain" aria-hidden="true">{drops.map(([emoji,left,duration,delay,sway,swayTime,tilt], i) =>
         <span className="money-drop" key={i} style={{left:`${left}%`,animationDuration:`${duration}s`,animationDelay:`${delay}s`}}>
@@ -36,7 +36,7 @@ function SocialGlyph({ platform }: { platform: (typeof platforms)[number] }) {
     if (platform === 'Facebook') return <span className="social-glyph social-glyph-facebook" aria-hidden="true"><svg viewBox="0 0 64 64"><path d="M37 56V34h8l2-9H37v-5c0-3 2-5 6-5h5V7c-2-1-6-1-10-1-10 0-16 6-16 15v4h-7v9h7v22z" fill="currentColor"/></svg></span>;
     if (platform === 'Instagram') return <span className="social-glyph social-glyph-instagram" aria-hidden="true"><svg viewBox="0 0 64 64"><rect x="12" y="12" width="40" height="40" rx="12" fill="none" stroke="currentColor" strokeWidth="5"/><circle cx="32" cy="32" r="10" fill="none" stroke="currentColor" strokeWidth="5"/><circle cx="45" cy="19" r="3.5" fill="currentColor"/></svg></span>;
     if (platform === 'YouTube') return <span className="social-glyph social-glyph-youtube" aria-hidden="true"><svg viewBox="0 0 64 64"><rect x="7" y="15" width="50" height="34" rx="11" fill="currentColor"/><path d="m27 23 17 9-17 9z" fill="var(--ink)"/></svg></span>;
-    return <span className="social-glyph social-glyph-tiktok" aria-hidden="true"><svg viewBox="0 0 64 64"><path d="M38 10c2 8 7 12 14 13v10c-5 0-10-2-14-5v15c0 9-7 16-16 16S6 52 6 43s7-16 16-16c2 0 4 0 6 1v10c-2-1-3-1-5-1-4 0-7 3-7 7s3 7 7 7 7-3 7-8V10z" fill="currentColor"/></svg></span>;
+    return <span className="social-glyph social-glyph-tiktok" aria-hidden="true"><svg viewBox="0 0 64 64"><path d="M38 10c2 8 7 12 14 13v10c-5 0-10-2-14-5v16c0 9-7 16-16 16S6 52 6 43s7-16 16-16c2 0 4 0 6 1v10c-2-1-3-1-5-1-4 0-7 3-7 7s3 7 7 7 7-3 7-8V10z" fill="currentColor"/></svg></span>;
 }
 
 type ShowcaseProduct = {
