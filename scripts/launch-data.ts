@@ -1,4 +1,6 @@
 import { db, transaction } from '../lib/shop-db';
+import { getSettings } from '../lib/shop-service';
+import { saveSettings } from '../lib/shop-admin';
 import { seedProducts } from '../lib/shop-seed';
 // Apply only to the authorized production deployment; previews never modify production data.
 if (process.env.VERCEL_ENV === 'production' && process.env.DATABASE_URL) {
@@ -56,5 +58,14 @@ if (process.env.VERCEL_ENV === 'production' && process.env.DATABASE_URL) {
     await c.query('INSERT INTO shop_data_migrations(id) VALUES($1)',[id]);
     console.log('InPost COD rates and owner-confirmed product manufacturer details saved.');
   });
+  const activationId='activate-authorized-inpost-sales-2026-10-21';
+  if(!(await db().query('SELECT id FROM shop_data_migrations WHERE id=$1',[activationId])).rows.length){
+    // User confirmed InPost, 29.99 PLN total COD shipping, and own-brand printed products.
+    // Reuse the normal validation for manufacturer data, stock, legal details and email configuration.
+    const current=await getSettings();
+    await saveSettings({...current,testMode:false,salesActive:true,codActive:true,stripeActive:false,courierActive:true,lockerActive:true,courierCodConfirmed:true,lockerCodConfirmed:true,codShippingPrice:2999,codSurcharge:0});
+    await db().query('INSERT INTO shop_data_migrations(id) VALUES($1) ON CONFLICT DO NOTHING',[activationId]);
+    console.log('Validated live InPost COD sales activated at 29.99 PLN total shipping.');
+  }
   await db().end();
 }
