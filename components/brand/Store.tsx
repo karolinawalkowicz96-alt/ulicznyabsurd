@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ArrowUpRight, X, Plus, Menu, LoaderCircle } from 'lucide-react';
 import CampaignHero from './CampaignHero';
 import Eyes from './Eyes';
@@ -9,29 +9,6 @@ import { BuyPanel, CartButton, useShop, priceOf, type Catalog } from '@/componen
 import { faq, platforms, profiles } from '@/lib/content';
 import type { SocialSnapshot } from '@/lib/social/types';
 function Mark() { return <img src="/logo-texture.webp" alt="Uliczny Absurd" width="56" height="56" className="mark"/>; }
-type CSSVars = CSSProperties & Record<`--${string}`, string | number>;
-function MoneyRain() {
-    const drops = [
-        ['💸',2,3.85,.05,28,2.6,-14],['💵',6,4.15,.65,34,3.2,18],['💸',10,3.7,1.15,24,2.3,12],
-        ['💵',14,4.25,.22,38,3.6,-16],['💸',18,3.95,1.7,31,2.9,20],['💸',22,3.8,.82,25,2.5,-12],
-        ['💵',26,4.3,1.35,42,3.8,17],['💸',30,4.05,.12,29,2.7,-18],['💵',34,3.9,2.05,36,3.3,14],
-        ['💸',38,4.2,.48,27,2.4,-15],['💵',42,3.9,1.55,40,3.5,19],['💸',46,3.75,.95,30,2.8,-13],
-        ['💸',50,4.25,.28,35,3.1,16],['💵',54,4,1.88,26,2.6,-17],['💸',58,3.8,.7,39,3.7,13],
-        ['💵',62,4.15,1.22,28,2.5,-19],['💸',66,3.9,.18,33,3.0,15],['💵',70,4.3,1.62,41,3.9,-14],
-        ['💸',74,4,.55,25,2.4,18],['💸',78,3.75,2.18,37,3.4,-16],['💵',82,4.2,1.02,32,2.9,14],
-        ['💸',86,3.95,.34,43,3.8,-18],['💵',90,3.8,1.45,27,2.6,17],['💸',94,4.1,.78,35,3.2,-13],
-        ['💸',97,4.3,1.95,29,2.7,19],['💵',4,4.05,2.35,38,3.6,-15],['💸',16,4.25,2.6,24,2.3,16],
-        ['💵',28,3.9,2.85,34,3.0,-17],['💸',40,4.3,2.45,42,3.9,13],['💵',52,4,2.72,30,2.8,-19],
-        ['💸',64,4.15,2.3,36,3.4,15],['💵',76,3.95,2.58,26,2.5,-14],['💸',88,4.25,2.9,40,3.7,18],
-    ] as const;
-    return <div className="money-rain" aria-hidden="true">{drops.map(([emoji,left,duration,delay,sway,swayTime,tilt], i) =>
-        <span className="money-drop" key={i} style={{left:`${left}%`,animationDuration:`${duration}s`,animationDelay:`${delay}s`}}>
-            <i className="money-sway" style={{'--money-sway-from':`${Math.round(sway * -.55)}px`,'--money-sway-to':`${sway}px`,'--money-sway-time':`${swayTime}s`} as CSSVars}>
-                <b className="money-note" style={{'--money-tilt-from':`${Math.round(tilt * -.6)}deg`,'--money-tilt-to':`${tilt}deg`,'--money-flutter-delay':`${-(i % 7) * .27}s`} as CSSVars}>{emoji}</b>
-            </i>
-        </span>
-    )}</div>;
-}
 function SocialGlyph({ platform }: { platform: (typeof platforms)[number] }) {
     if (platform === 'Facebook') return <span className="social-glyph social-glyph-facebook" aria-hidden="true"><svg viewBox="0 0 64 64"><path d="M37 56V34h8l2-9H37v-5c0-3 2-5 6-5h5V7c-2-1-6-1-10-1-10 0-16 6-16 15v4h-7v9h7v22z" fill="currentColor"/></svg></span>;
     if (platform === 'Instagram') return <span className="social-glyph social-glyph-instagram" aria-hidden="true"><svg viewBox="0 0 64 64"><rect x="12" y="12" width="40" height="40" rx="12" fill="none" stroke="currentColor" strokeWidth="5"/><circle cx="32" cy="32" r="10" fill="none" stroke="currentColor" strokeWidth="5"/><circle cx="45" cy="19" r="3.5" fill="currentColor"/></svg></span>;
@@ -156,7 +133,7 @@ export default function Store({ initialProduct = false, initialCatalog, contactE
     const current = stats?.[selected];
     const activeShowcase = displayProducts[showcaseIndex] || displayProducts[0] || showcaseProducts[0];
     const activeProduct=catalog.products.find(p=>p.id===activeShowcase.id);
-    return <><MoneyRain/><a href="#main" className="skip-link">Przejdź do treści</a>
+    return <><a href="#main" className="skip-link">Przejdź do treści</a>
  <header className="header"><Link href="/" className="brand" aria-label="Uliczny Absurd — strona główna"><Mark /><span>ULICZNY<br />ABSURD</span></Link><nav aria-label="Główna nawigacja"><a href="#kolekcja">KOSZULKI</a><a href="#spolecznosc">NASZ INTERNET</a><a href="#kontakt">WSPÓŁPRACA <ArrowUpRight size={16}/></a></nav><div className="header-actions"><CartButton/><button className="icon-button mobile-menu" aria-label="Otwórz menu" onClick={() => setMenu(true)}><Menu /></button></div></header>
  <main id="main"><CampaignHero />
  <div className="ticker" aria-hidden="true"><div>{Array.from({ length: 4 }, (_, i) => <span key={i}>NIE WSZYSTKO MUSI MIEĆ SENS <b className="ticker-emoji">🔥</b> ALE MOŻE MIEĆ DOBRY NADRUK <b className="ticker-emoji">🔥</b> </span>)}</div></div>

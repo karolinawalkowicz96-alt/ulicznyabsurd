@@ -120,3 +120,5 @@ test('test Stripe Checkout on live storefront isolates stock, mail and rejects l
   await db().query('UPDATE shop_settings SET data=$1',[JSON.stringify(oldSettings)]);
  }
 });
+
+test('disabled COD rejects new orders even in test mode',async()=>{process.env.COD_CHECKOUT_ENABLED='false';try{await assert.rejects(createOrder(input()),/pobraniem jest wyłączona/);}finally{delete process.env.COD_CHECKOUT_ENABLED;}});

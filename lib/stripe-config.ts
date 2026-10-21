@@ -15,6 +15,7 @@ export function paymentSettings(settings: ShopSettings): ShopSettings {
   const configured = Boolean(mode && compatible && process.env.STRIPE_WEBHOOK_SECRET);
   return {
     ...settings,
+    codActive: settings.codActive && process.env.COD_CHECKOUT_ENABLED !== 'false',
     stripeActive: configured && (settings.stripeActive || process.env.STRIPE_CHECKOUT_ENABLED === 'true'),
     stripeTestMode: mode === 'test',
   };

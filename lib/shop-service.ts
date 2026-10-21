@@ -51,7 +51,7 @@ export async function createOrder(raw:unknown){
     const testOrder=settings.testMode||(input.payment==='stripe'&&settings.stripeTestMode===true);
     if(testOrder&&input.testAcknowledged!==true)throw new Error('Potwierdź próbne zamówienie — bez wysyłki i bez obowiązku zapłaty.');
     if(!settings.testMode&&!settings.salesActive)throw new Error('Sprzedaż jest obecnie wyłączona.');
-    if(input.payment==='cod'&&!settings.testMode&&!settings.codActive)throw new Error('Płatność za pobraniem jest wyłączona.');
+    if(input.payment==='cod'&&(process.env.COD_CHECKOUT_ENABLED==='false'||(!settings.testMode&&!settings.codActive)))throw new Error('Płatność za pobraniem jest wyłączona.');
     if(input.payment==='stripe'&&(!settings.stripeActive||!process.env.STRIPE_SECRET_KEY||!process.env.STRIPE_WEBHOOK_SECRET))throw new Error('Płatności online nie są skonfigurowane.');
     if(input.payment==='stripe'&&testOrder!==(stripeKeyMode()==='test'))throw new Error('Tryb klucza Stripe nie odpowiada trybowi sklepu.');
     if(!settings.testMode&&(!settings.legalReady||!settings.sellerPhone||!settings.fulfillmentDays||!settings.sizeChartApproved||!settings.shippingReady))throw new Error('Informacje wymagane do uruchomienia sprzedaży nie zostały uzupełnione.');

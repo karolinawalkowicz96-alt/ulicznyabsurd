@@ -17,14 +17,12 @@ export default function Checkout(){
   const test=Boolean(settings.testMode);
   const courierActive=Boolean(settings.courierActive);
   const lockerActive=Boolean(settings.lockerActive);
-  const codActive=Boolean(settings.codActive);
   const stripeActive=Boolean(settings.stripeActive);
   const [preferredDelivery,setDelivery]=useState<'courier'|'locker'>('courier');
   const delivery=!courierActive&&lockerActive?'locker':preferredDelivery;
   const abroad=destinationCountry!=='PL';
   const selectedDelivery=abroad?'international':delivery;
-  const [preferredPayment,setPayment]=useState<'cod'|'stripe'>('cod');
-  const payment=abroad||(!codActive&&stripeActive)?'stripe':preferredPayment;
+  const payment='stripe' as const;
   const testOrder=test||(payment==='stripe'&&Boolean(settings.stripeTestMode));
   const [error,setError]=useState('');const [busy,setBusy]=useState(false);const [order,setOrder]=useState<ShopOrder|null>(null);const [loadingOrder,setLoadingOrder]=useState(false);
 
@@ -48,9 +46,8 @@ export default function Checkout(){
 
   const subtotal=useMemo(()=>items.reduce((s,i)=>s+i.quantity*(priceOf(catalog.products.find(p=>p.id===i.id)||{price:0} as never)||0),0),[items,catalog.products]);
   const shipping=shippingTotal(settings,selectedDelivery,payment,test);
-  const codConfirmed=test||Boolean(delivery==='locker'?settings.lockerCodConfirmed:settings.courierCodConfirmed);
   const deliveryAvailable=abroad?Boolean(settings.internationalShippingReady):(delivery==='locker'?lockerActive:courierActive);
-  const paymentAvailable=abroad?payment==='stripe'&&stripeActive:(payment==='cod'?codActive&&codConfirmed:stripeActive);
+  const paymentAvailable=stripeActive;
   const checkoutAvailable=catalog.configured&&deliveryAvailable&&paymentAvailable&&(test||Boolean(settings.salesActive));
 
   async function submit(e:React.FormEvent<HTMLFormElement>){
@@ -73,7 +70,7 @@ export default function Checkout(){
   return <><ShopHeader/><main className="section shop-checkout"><div className="checkout-top"><span className="eyebrow">ULICZNY ABSURD / ZAMÓWIENIE</span><div className="checkout-steps" aria-label="Etapy zamówienia"><span className="done"><b>01</b>Koszyk</span><span className={order?'done':'active'}><b>02</b>Dostawa i płatność</span><span className={order?'active':''}><b>03</b>Potwierdzenie</span></div></div>
   {order&&error&&<p className="error" role="alert">{error}</p>}
   {loadingOrder?<p role="status">Wczytujemy zamówienie…</p>:order?<Confirmation order={order} busy={busy} retryPayment={retryPayment}/>:<>
-    <div className="checkout-heading"><div><h1>JESZCZE CHWILA.<br/>I NOSISZ ABSURD.</h1><p>Sprawdź dane, wybierz dostawę i płatność. Przed złożeniem zamówienia zobaczysz pełną kwotę.</p></div></div>
+    <div className="checkout-heading"><div><h1>JESZCZE CHWILA.<br/>I NOSISZ ABSURD.</h1><p>Sprawdź dane i wybierz dostawę. Przed złożeniem zamówienia zobaczysz pełną kwotę.</p></div></div>
 
     {catalogReady&&!catalog.configured&&<p className="error">Sklep oczekuje na konfigurację bazy danych. Zamówienia są tymczasowo niedostępne.</p>}
     {catalogReady&&!test&&!Boolean(settings.salesActive)&&<p className="form-notice">Zamówienia są chwilowo niedostępne. Skontaktuj się z nami: <a href="mailto:ulicznyabsurd@gmail.com">ulicznyabsurd@gmail.com</a>.</p>}
@@ -98,28 +95,22 @@ export default function Checkout(){
           <details className="checkout-details"><summary>Dane do dokumentu sprzedaży (opcjonalnie)</summary><label>Nazwa / dane i adres; identyfikator podatkowy, jeżeli dotyczy<textarea name="invoice" maxLength={1000} rows={3}/></label></details>
         </section>
 
-        <section className="checkout-card"><div className="checkout-card-title"><span>03</span><div><h2>Płatność</h2><p>{testOrder?'Zamówienie próbne — bez pobierania płatności.':'Wybierz sposób płatności.'}</p></div></div>
-          <div className="choice-grid" role="radiogroup" aria-label="Metoda płatności">
-            {codActive&&!abroad&&<Choice checked={payment==='cod'} onChange={()=>setPayment('cod')} name="payment" value="cod" title={test?'Za pobraniem — próba':'Za pobraniem'} meta={test?'Bez płatności i wysyłki':`Dostawa ${money(shippingTotal(settings,delivery,'cod',test))}. Płacisz przy odbiorze.`} icon={<PackageCheck/>}/>}
-            {stripeActive&&<Choice checked={payment==='stripe'} onChange={()=>setPayment('stripe')} name="payment" value="stripe" title={settings.stripeTestMode?"Płatność online — TEST":"Płatność online"} meta={settings.stripeTestMode?"Stripe Checkout · bez pobierania pieniędzy":"Bezpieczna płatność w Stripe Checkout"} icon={<CreditCard/>}/>}
-          </div>
-          {!stripeActive&&codActive&&<div className="checkout-online-soon"><span className="checkout-online-soon-icon" aria-hidden="true"><CreditCard size={22}/></span><div className="checkout-online-soon-copy"><strong>Płatności online już wkrótce</strong><p>Pracujemy nad ich uruchomieniem. Na ten moment w Polsce zapłacisz za pobraniem.</p></div><span className="checkout-online-soon-label">WKRÓTCE</span></div>}
-          {!codActive&&!stripeActive&&!abroad&&<p className="error">Brak aktywnej metody płatności.</p>}{abroad&&<p className="checkout-help">Zamówienia zagraniczne są opłacane online. {(!stripeActive||!settings.internationalShippingReady)&&'Możliwość złożenia zamówienia zostanie uruchomiona po potwierdzeniu obsługi dostaw i aktywacji płatności online.'}</p>}
-          {!abroad&&payment==='cod'&&!codConfirmed&&<p className="error">Pobranie dla tej metody dostawy nie zostało potwierdzone z przewoźnikiem.</p>}
-          {!abroad&&payment==='cod'&&delivery==='locker'&&<p className="checkout-help">Pobranie w automacie Paczkomat® opłacisz bezgotówkowo przed otwarciem skrytki, zgodnie z instrukcją InPost. Nie wkładasz gotówki do automatu.</p>}{payment==='stripe'&&stripeActive&&<p className="checkout-help">Po zatwierdzeniu otworzy się strona płatności Stripe. Po zakończeniu wrócisz do podsumowania zamówienia.</p>}
+        <section className="checkout-card"><div className="checkout-card-title"><span>03</span><div><h2>Płatność online</h2><p>Ostatni krok do Twojej koszulki.</p></div></div>
+          <div className="stripe-payment-card"><CreditCard size={28}/><div><strong>Zapłać bezpiecznie przez Stripe</strong><p>Po złożeniu zamówienia przejdziesz do płatności. Dostępne metody wybierzesz na stronie Stripe, a potem wrócisz do swojego zamówienia.</p><span>{settings.stripeTestMode?'TRYB TESTOWY · BEZ POBIERANIA PIENIĘDZY':'PŁATNOŚĆ ONLINE · SZYFROWANE POŁĄCZENIE'}</span></div></div>
+          {!stripeActive&&<p className="error">Płatność online jest chwilowo niedostępna. Spróbuj ponownie później.</p>}
         </section>
 
         <section className="checkout-card checkout-legal"><div className="checkout-card-title"><span>04</span><div><h2>Przed zamówieniem</h2><p>Najważniejsze informacje o sprzedawcy i umowie.</p></div></div>
           <div className="seller-box"><strong>ULICZNY ABSURD — Paweł Duszyński</strong><span>ul. Północna 24/2, 44-335 Jastrzębie-Zdrój</span><a href="mailto:ulicznyabsurd@gmail.com">ulicznyabsurd@gmail.com</a>{settings.sellerPhone?<a href={`tel:${String(settings.sellerPhone)}`}>{String(settings.sellerPhone)}</a>:<span className="seller-missing">Telefon zostanie uzupełniony przed uruchomieniem sprzedaży.</span>}</div>
           <p>Czas realizacji: 7 dni roboczych. Do tego należy doliczyć czas transportu. Standardowe koszulki z gotowym wzorem podlegają ustawowemu prawu odstąpienia na zasadach opisanych w <Link href="/zwroty" target="_blank">informacji o zwrotach</Link>.</p>
-          {testOrder&&<p className="checkout-test-note"><strong>Zamówienie testowe.</strong> Sprawdzisz proces zamówienia i wybraną metodę płatności. Nie wysyłamy towaru ani e-maili transakcyjnych i nie powstaje obowiązek zapłaty.</p>}<label className="shop-checkbox"><input type="checkbox" name="acceptedTerms" required/><span>{testOrder?'Potwierdzam, że składam wyłącznie zamówienie testowe, bez wysyłki i obowiązku zapłaty. ':''}Zapoznałem/am się z <Link href="/regulamin" target="_blank">regulaminem sklepu</Link> i akceptuję jego warunki. <Link href="/prywatnosc" target="_blank">Polityka prywatności</Link> jest informacją o przetwarzaniu danych, a nie dodatkową zgodą.</span></label>
+          {testOrder&&<p className="checkout-test-note"><strong>Zamówienie testowe.</strong> Przycisk poniżej uruchamia wyłącznie symulację zakupu w Stripe. Używaj tylko danych testowej karty. Nie wysyłamy towaru ani e-maili transakcyjnych i nie powstaje obowiązek zapłaty.</p>}<label className="shop-checkbox"><input type="checkbox" name="acceptedTerms" required/><span>{testOrder?'Potwierdzam, że składam wyłącznie zamówienie testowe, bez wysyłki i obowiązku zapłaty. ':''}Zapoznałem/am się z <Link href="/regulamin" target="_blank">regulaminem sklepu</Link> i akceptuję jego warunki. <Link href="/prywatnosc" target="_blank">Polityka prywatności</Link> jest informacją o przetwarzaniu danych, a nie dodatkową zgodą.</span></label>
         </section>
         {error&&<p className="error" role="alert">{error}</p>}
-        <button className="button dark checkout-submit" disabled={busy||!checkoutAvailable} type="submit">{busy?'Zapisywanie…':testOrder?(payment==='stripe'?'Przejdź do testowej płatności Stripe':'Złóż zamówienie testowe'):'Zamawiam z obowiązkiem zapłaty'}</button>
+        <button className="button dark checkout-submit" disabled={busy||!checkoutAvailable} type="submit">{busy?'Przekierowujemy do Stripe…':'Złóż zamówienie z obowiązkiem zapłaty'}</button>
         {!checkoutAvailable&&<p className="checkout-help">{abroad?'Zamówienie zagraniczne będzie dostępne po potwierdzeniu przewoźnika i uruchomieniu płatności online.':'Przycisk pozostaje nieaktywny, dopóki sklep, dostawa i wybrana płatność nie są rzeczywiście dostępne.'}</p>}
       </form>
 
-      <aside className="shop-order-summary" aria-label="Podsumowanie zamówienia"><span className="eyebrow">TWOJE ZAMÓWIENIE</span><div className="summary-items">{items.map(i=>{const p=catalog.products.find(p=>p.id===i.id);return <div className="summary-item" key={i.id+i.size}>{p&&<img src={p.image} alt=""/>}<div><h3>{p?.name||'Produkt'}</h3><p>Rozmiar {i.size} · {i.quantity} szt.</p><strong>{p&&priceOf(p)!=null?money(i.quantity*priceOf(p)!):'Cena do potwierdzenia'}</strong></div></div>})}</div><div className="summary-lines"><p><span>Produkty</span><strong>{money(subtotal)}</strong></p><p><span>{abroad?'Dostawa za granicę':`Dostawa InPost${payment==='cod'?' za pobraniem':''}`}</span><strong>{money(shipping)}</strong></p><p className="summary-total"><span>Razem</span><strong>{money(subtotal+shipping)}</strong></p></div><div className="summary-note"><Check size={18}/><p>{abroad?'Kwota dostawy zagranicznej jest uwzględniona w podsumowaniu.':'Pełna kwota, bez niespodzianek. Dostawa za pobraniem obejmuje już opłatę za pobranie.'}</p></div></aside>
+      <aside className="shop-order-summary" aria-label="Podsumowanie zamówienia"><span className="eyebrow">TWOJE ZAMÓWIENIE</span><div className="summary-items">{items.map(i=>{const p=catalog.products.find(p=>p.id===i.id);return <div className="summary-item" key={i.id+i.size}>{p&&<img src={p.image} alt=""/>}<div><h3>{p?.name||'Produkt'}</h3><p>Rozmiar {i.size} · {i.quantity} szt.</p><strong>{p&&priceOf(p)!=null?money(i.quantity*priceOf(p)!):'Cena do potwierdzenia'}</strong></div></div>})}</div><div className="summary-lines"><p><span>Produkty</span><strong>{money(subtotal)}</strong></p><p><span>{abroad?'Dostawa za granicę':'Dostawa InPost'}</span><strong>{money(shipping)}</strong></p><p className="summary-total"><span>Razem</span><strong>{money(subtotal+shipping)}</strong></p></div><div className="summary-note"><Check size={18}/><p>{abroad?'Kwota dostawy zagranicznej jest uwzględniona w podsumowaniu.':'Pełna kwota za produkty i dostawę. Bez dodatkowej opłaty za płatność.'}</p></div></aside>
     </div>}
   </>}</main></>;
 }
