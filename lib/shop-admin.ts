@@ -11,7 +11,7 @@ const productSchema=z.object({
   image:z.string().max(1000),images:z.array(z.string().max(1000)).max(10).default([]),price:z.number().int().min(1).max(10000000).nullable(),priceApproved:z.boolean(),
   active:z.boolean(),hidden:z.boolean(),soldOut:z.boolean(),sortOrder:z.number().int().min(0).max(100000),bestseller:z.boolean(),isNew:z.boolean(),seoTitle:z.string().max(250),seoDescription:z.string().max(500),
   material:z.string().max(1000),care:z.string().max(2000),manufacturer:optionalText(500),manufacturerAddress:optionalText(1000),manufacturerEmail:optionalText(200),manufacturerCountry:optionalText(2),
-  responsiblePerson:optionalText(500),responsiblePersonAddress:optionalText(1000),responsiblePersonEmail:optionalText(200),composition:optionalText(1000),safetyInfo:optionalText(2000),gpsrReady:z.boolean().optional().default(false),
+  responsiblePerson:optionalText(500),responsiblePersonAddress:optionalText(1000),responsiblePersonEmail:optionalText(200),baseGarment:optionalText(1000),composition:optionalText(1000),safetyInfo:optionalText(2000),gpsrReady:z.boolean().optional().default(false),
   variants:z.array(z.object({size:z.enum(shopSizes),stock:z.number().int().min(0).max(1000000).nullable()})).length(5)
 });
 function safeImage(url:string){return /^\/(?!\/)[a-zA-Z0-9/_ .-]+\.(webp|png|jpe?g|avif)$/i.test(url)||/^https:\/\/[a-z0-9.-]+\.public\.blob\.vercel-storage\.com\//i.test(url);}
@@ -20,7 +20,7 @@ export async function saveProduct(raw:unknown){const p=productSchema.parse(raw);
 const settingsSchema=z.object({
   testMode:z.boolean(),salesActive:z.boolean(),codActive:z.boolean(),stripeActive:z.boolean(),
   courierActive:z.boolean().default(false),lockerActive:z.boolean().default(false),courierPrice:z.number().int().min(0).max(1000000).default(0),lockerPrice:z.number().int().min(0).max(1000000).default(0),
-  courierCodConfirmed:z.boolean(),lockerCodConfirmed:z.boolean(),internationalCodConfirmed:z.boolean(),codSurcharge:z.number().int().min(0).max(100000),
+  courierCodConfirmed:z.boolean(),lockerCodConfirmed:z.boolean(),internationalCodConfirmed:z.boolean(),codSurcharge:z.number().int().min(0).max(100000),codShippingPrice:z.number().int().min(0).max(1000000).optional(),
   quarterlyLimit:z.number().int().positive(),instagram:z.number().int().min(0),facebook:z.number().int().min(0),youtube:z.number().int().min(0),tiktok:z.number().int().min(0),views:z.number().int().min(0),statsUpdated:z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   sellerPhone:z.string().trim().max(30).optional().default(''),fulfillmentDays:z.number().int().min(0).max(365).optional().default(0),legalReady:z.boolean().optional().default(false),sizeChartApproved:z.boolean().optional().default(false),shippingReady:z.boolean().optional().default(false)
 });

@@ -24,7 +24,7 @@ before(async()=>{
  const schema=await readFile('db/001-shop.sql','utf8');for(const statement of schema.split(';').filter(s=>s.trim()))await db().query(statement);
  await db().query('TRUNCATE shop_outbox,shop_ledger,shop_orders,shop_sessions,shop_admins,shop_rate_limits,shop_variants,shop_products,shop_settings CASCADE');
  await db().query('INSERT INTO shop_settings VALUES(1,$1)',[JSON.stringify(defaultSettings)]);
- for(const p of seedProducts){await db().query('INSERT INTO shop_products VALUES($1,$2,$3)',[p.id,p.slug,JSON.stringify({...p,price:12900})]);for(const v of p.variants)await db().query('INSERT INTO shop_variants VALUES($1,$2,$3,$4)',[p.id,v.size,null,100]);}
+ for(const p of seedProducts){await db().query('INSERT INTO shop_products VALUES($1,$2,$3)',[p.id,p.slug,JSON.stringify({...p,price:12900,gpsrReady:false})]);for(const v of p.variants)await db().query('INSERT INTO shop_variants VALUES($1,$2,$3,$4)',[p.id,v.size,null,100]);}
 });
 after(async()=>{await pool?.end();await wasm?.close();});
 const input=()=>({idempotencyKey:randomUUID(),items:[{id:'oko-01',size:'M',quantity:2},{id:'glowka-04',size:'XL',quantity:1}],customer:{firstName:'Jan',lastName:'Testowy',email:'test@example.com',phone:'123456789',country:'PL',street:'Testowa 1',postalCode:'00-001',city:'Warszawa'},delivery:'courier',payment:'cod',acceptedTerms:true,testAcknowledged:true});
@@ -47,3 +47,22 @@ test('Stripe expiration restores stock once, duplicate cannot restore twice',asy
 test('regressing shipped status cannot enable cancellation or double-restock',async()=>{const {updateOrder}=await import('../lib/shop-admin');const a=await createOrder(input());await updateOrder(a.id,{status:'shipped',carrier:'QA courier',trackingNumber:'QA123'});await updateOrder(a.id,{status:'processing',shippingStatus:'pending'});await assert.rejects(updateOrder(a.id,{status:'cancelled'}),/zwrot/);});
 
 test('test orders require explicit acknowledgement and cannot use Stripe',async()=>{await assert.rejects(createOrder({...input(),testAcknowledged:false}),/Potwierdź/);await assert.rejects(createOrder({...input(),payment:'stripe'}),/Potwierdź/);});
+
+
+test('live InPost COD uses 29.99 total shipping for courier and locker and queues notifications',async()=>{
+ const settings={...defaultSettings,testMode:false,salesActive:true,legalReady:true,shippingReady:true,sizeChartApproved:true,codActive:true,courierCodConfirmed:true,lockerCodConfirmed:true,codShippingPrice:2999,codSurcharge:0};
+ await db().query('UPDATE shop_settings SET data=$1',[JSON.stringify(settings)]);
+ await db().query("UPDATE shop_products SET data=data || '{\"gpsrReady\":true}'::jsonb");
+ await db().query('UPDATE shop_variants SET stock=10');
+ try {
+  for(const delivery of ['courier','locker']){
+   const request={...input(),delivery,items:[{id:'oko-01',size:'M',quantity:1}],customer:{...input().customer,locker:'WAW01M'},expectedTotal:15899,testAcknowledged:false};
+   const order=await createOrder(request);
+   assert.equal(order.shipping,2999);assert.equal(order.total,15899);assert.equal(order.testMode,false);assert.equal(order.paymentStatus,'unpaid');assert.equal(order.carrier,'InPost');
+   const jobs=(await db().query('SELECT recipient,status FROM shop_outbox WHERE order_id=$1',[order.id])).rows;
+   assert.deepEqual(jobs.map(j=>j.recipient).sort(),['test@example.com','ulicznyabsurd@gmail.com']);assert(jobs.every(j=>j.status==='pending'));
+   assert.equal((await createOrder(request)).id,order.id);
+   await assert.rejects(createOrder({...request,idempotencyKey:randomUUID(),expectedTotal:14799}),/zmianie/);
+  }
+ }finally{await db().query('UPDATE shop_settings SET data=$1',[JSON.stringify(defaultSettings)]);}
+});

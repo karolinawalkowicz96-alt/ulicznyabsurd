@@ -14,3 +14,14 @@ test('password hashes salted and incorrect/malformed passwords rejected',()=>{co
 test('state changes reject cross-origin and absent Origin',()=>{process.env.APP_URL='https://www.ulicznyabsurd.pl';assert.throws(()=>assertOrigin(new Request('https://www.ulicznyabsurd.pl/api/shop/orders')));assert.throws(()=>assertOrigin(new Request('https://www.ulicznyabsurd.pl/api/shop/orders',{headers:{origin:'https://evil.example'}})));assert.doesNotThrow(()=>assertOrigin(new Request('https://www.ulicznyabsurd.pl/api/shop/orders',{headers:{origin:process.env.APP_URL!}})));});
 test('order schema rejects empty cart, missing terms, XS and invalid personal data',()=>{const base={idempotencyKey:'5cce6292-eaef-4d6b-8a9e-5b59bcecfabc',items:[{id:'oko-01',size:'M',quantity:1}],customer:{firstName:'Jan',lastName:'Testowy',email:'jan@example.com',phone:'123456789',country:'PL',street:'Testowa 1',postalCode:'00-001',city:'Warszawa'},delivery:'courier',payment:'cod',acceptedTerms:true};assert(orderInput.safeParse(base).success);for(const patch of [{items:[]},{acceptedTerms:false},{items:[{id:'x',size:'XS',quantity:1}]},{customer:{...base.customer,email:'bad'}},{payment:'invalid'}])assert(!orderInput.safeParse({...base,...patch}).success);});
 test('Stripe HMAC rejects tampering, wrong secret and expired timestamp',async()=>{const {verifySignature}=await import('../lib/checkout');const {createHmac}=await import('node:crypto');const timestamp=Math.floor(Date.now()/1000),body='{"type":"checkout.session.completed"}',secret='unit-test-secret';const signature=createHmac('sha256',secret).update(`${timestamp}.${body}`).digest('hex');const header=`t=${timestamp},v1=${signature}`;assert(await verifySignature(body,header,secret));assert(!await verifySignature(body+' ',header,secret));assert(!await verifySignature(body,header,'wrong-secret'));assert(!await verifySignature(body,header,secret,Date.now()+301000));});
+
+
+test('COD total replaces the base delivery price; online keeps the original delivery rate',async()=>{
+ const {shippingTotal}=await import('../lib/shop-shipping');
+ const settings={courierPrice:1899,lockerPrice:1499,codSurcharge:500,codShippingPrice:2999};
+ assert.equal(shippingTotal(settings,'courier','cod'),2999);
+ assert.equal(shippingTotal(settings,'locker','cod'),2999);
+ assert.equal(shippingTotal(settings,'courier','stripe'),1899);
+ assert.equal(shippingTotal(settings,'locker','stripe'),1499);
+ assert.equal(shippingTotal({...settings,codShippingPrice:undefined},'locker','cod'),1999);
+});

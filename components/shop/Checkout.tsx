@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { Check, CreditCard, MapPin, PackageCheck, ShoppingBag } from 'lucide-react';
 import { useShop, ShopHeader, priceOf, type Catalog } from './Shop';
+import LockerPicker from './LockerPicker';
+import { shippingTotal } from '@/lib/shop-shipping';
 import { money } from '@/lib/catalog';
 import type { ShopOrder } from '@/lib/shop-types';
 
@@ -26,8 +28,7 @@ export default function Checkout(){
   useEffect(()=>{const token=new URLSearchParams(location.search).get('token');if(token){setLoadingOrder(true);fetch(`/api/shop/orders?token=${encodeURIComponent(token)}`,{cache:'no-store'}).then(async r=>{const d=await r.json() as {order:ShopOrder;error?:string};if(!r.ok)throw Error(d.error||'Nie można odczytać zamówienia.');setOrder(d.order);if(d.order.payment==='stripe'&&d.order.paymentStatus==='paid')setItems([]);}).catch(e=>setError(e.message)).finally(()=>setLoadingOrder(false));}},[setItems]);
 
   const subtotal=useMemo(()=>items.reduce((s,i)=>s+i.quantity*(priceOf(catalog.products.find(p=>p.id===i.id)||{price:0} as never)||0),0),[items,catalog.products]);
-  const baseShipping=test?(delivery==='locker'?1499:1899):Number(delivery==='locker'?settings.lockerPrice:settings.courierPrice)||0;
-  const shipping=baseShipping+(payment==='cod'?Number(settings.codSurcharge||0):0);
+  const shipping=shippingTotal(settings,delivery,payment,test);
   const codConfirmed=test||Boolean(delivery==='locker'?settings.lockerCodConfirmed:settings.courierCodConfirmed);
   const deliveryAvailable=delivery==='locker'?lockerActive:courierActive;
   const paymentAvailable=payment==='cod'?codActive&&codConfirmed:stripeActive;
@@ -66,11 +67,11 @@ export default function Checkout(){
 
         <section className="checkout-card"><div className="checkout-card-title"><span>02</span><div><h2>Dostawa</h2><p>Wybierz wygodny sposób odbioru.</p></div></div>
           <div className="choice-grid" role="radiogroup" aria-label="Metoda dostawy">
-            {courierActive&&<Choice checked={delivery==='courier'} onChange={()=>setDelivery('courier')} name="delivery" value="courier" title="Kurier" meta={money(test?1899:Number(settings.courierPrice)||0)} icon={<PackageCheck/>}/>}
-            {lockerActive&&<Choice checked={delivery==='locker'} onChange={()=>setDelivery('locker')} name="delivery" value="locker" title="Automat paczkowy" meta={money(test?1499:Number(settings.lockerPrice)||0)} icon={<MapPin/>}/>}
+            {courierActive&&<Choice checked={delivery==='courier'} onChange={()=>setDelivery('courier')} name="delivery" value="courier" title="Kurier InPost" meta={money(shippingTotal(settings,'courier',payment,test))} icon={<PackageCheck/>}/>}
+            {lockerActive&&<Choice checked={delivery==='locker'} onChange={()=>setDelivery('locker')} name="delivery" value="locker" title="Paczkomat® InPost" meta={money(shippingTotal(settings,'locker',payment,test))} icon={<MapPin/>}/>}
           </div>
           {!courierActive&&!lockerActive&&<p className="error">Sprzedawca nie aktywował jeszcze żadnej zweryfikowanej metody dostawy.</p>}
-          {delivery==='locker'?<label>Identyfikator automatu paczkowego<input name="locker" required minLength={3} maxLength={30} placeholder="Np. WAW01M" autoComplete="off"/></label>:<label>Ulica, numer budynku / lokalu<input name="street" required maxLength={200} autoComplete="street-address"/></label>}
+          {delivery==='locker'?<LockerPicker/>:<label>Ulica, numer budynku / lokalu<input name="street" required maxLength={200} autoComplete="street-address"/></label>}
           <div className="form-row"><label>Kod pocztowy<input name="postalCode" required pattern="[0-9]{2}-[0-9]{3}" placeholder="00-000" maxLength={6} autoComplete="postal-code"/></label><label>Miasto<input name="city" required minLength={2} maxLength={100} autoComplete="address-level2"/></label></div>
           <label>Uwagi do zamówienia <small>(opcjonalnie)</small><textarea name="notes" maxLength={2000} rows={3}/></label>
           <details className="checkout-details"><summary>Dane do dokumentu sprzedaży (opcjonalnie)</summary><label>Nazwa / dane i adres; identyfikator podatkowy, jeżeli dotyczy<textarea name="invoice" maxLength={1000} rows={3}/></label></details>
@@ -78,12 +79,12 @@ export default function Checkout(){
 
         <section className="checkout-card"><div className="checkout-card-title"><span>03</span><div><h2>Płatność</h2><p>{test?'Zamówienie próbne — bez pobierania płatności.':'Wybierz sposób płatności.'}</p></div></div>
           <div className="choice-grid" role="radiogroup" aria-label="Metoda płatności">
-            {codActive&&<Choice checked={payment==='cod'} onChange={()=>setPayment('cod')} name="payment" value="cod" title={test?'Za pobraniem — próba':'Za pobraniem'} meta={Number(settings.codSurcharge)>0?`+ ${money(Number(settings.codSurcharge))}`:(test?'bez płatności i wysyłki':'przy odbiorze')} icon={<PackageCheck/>}/>}
+            {codActive&&<Choice checked={payment==='cod'} onChange={()=>setPayment('cod')} name="payment" value="cod" title={test?'Za pobraniem — próba':`Za pobraniem (dostawa ${money(shippingTotal(settings,delivery,'cod',test))})`} meta={test?'bez płatności i wysyłki':'Płacisz za produkty i dostawę przy odbiorze'} icon={<PackageCheck/>}/>}
             {stripeActive&&<Choice checked={payment==='stripe'} onChange={()=>setPayment('stripe')} name="payment" value="stripe" title="Płatność online" meta="Stripe · dostępne metody konta" icon={<CreditCard/>}/>}
           </div>
           {!codActive&&!stripeActive&&<p className="error">Brak aktywnej metody płatności.</p>}
           {payment==='cod'&&!codConfirmed&&<p className="error">Pobranie dla tej metody dostawy nie zostało potwierdzone z przewoźnikiem.</p>}
-          {payment==='stripe'&&<p className="checkout-help">Stripe pokaże wyłącznie metody dostępne dla tego konta i transakcji — np. kartę lub BLIK, jeśli BLIK jest aktywowany i dostępny.</p>}
+          {payment==='cod'&&delivery==='locker'&&<p className="checkout-help">Pobranie w automacie Paczkomat® opłacisz bezgotówkowo przed otwarciem skrytki, zgodnie z instrukcją InPost. Nie wkładasz gotówki do automatu.</p>}{payment==='stripe'&&<p className="checkout-help">Stripe pokaże wyłącznie metody dostępne dla tego konta i transakcji — np. kartę lub BLIK, jeśli BLIK jest aktywowany i dostępny.</p>}
         </section>
 
         <section className="checkout-card checkout-legal"><div className="checkout-card-title"><span>04</span><div><h2>Przed zamówieniem</h2><p>Najważniejsze informacje o sprzedawcy i umowie.</p></div></div>
@@ -96,7 +97,7 @@ export default function Checkout(){
         {!checkoutAvailable&&<p className="checkout-help">Przycisk pozostaje nieaktywny, dopóki sklep, dostawa i wybrana płatność nie są rzeczywiście dostępne.</p>}
       </form>
 
-      <aside className="shop-order-summary" aria-label="Podsumowanie zamówienia"><span className="eyebrow">TWOJE ZAMÓWIENIE</span><div className="summary-items">{items.map(i=>{const p=catalog.products.find(p=>p.id===i.id);return <div className="summary-item" key={i.id+i.size}>{p&&<img src={p.image} alt=""/>}<div><h3>{p?.name||'Produkt'}</h3><p>Rozmiar {i.size} · {i.quantity} szt.</p><strong>{p&&priceOf(p)!=null?money(i.quantity*priceOf(p)!):'Cena do potwierdzenia'}</strong></div></div>})}</div><div className="summary-lines"><p><span>Produkty</span><strong>{money(subtotal)}</strong></p><p><span>Dostawa{payment==='cod'&&Number(settings.codSurcharge)>0?' + pobranie':''}</span><strong>{money(shipping)}</strong></p><p className="summary-total"><span>Razem</span><strong>{money(subtotal+shipping)}</strong></p></div><div className="summary-note"><Check size={18}/><p>Cena i stan produktów są ponownie sprawdzane na serwerze przed zapisaniem zamówienia.</p></div></aside>
+      <aside className="shop-order-summary" aria-label="Podsumowanie zamówienia"><span className="eyebrow">TWOJE ZAMÓWIENIE</span><div className="summary-items">{items.map(i=>{const p=catalog.products.find(p=>p.id===i.id);return <div className="summary-item" key={i.id+i.size}>{p&&<img src={p.image} alt=""/>}<div><h3>{p?.name||'Produkt'}</h3><p>Rozmiar {i.size} · {i.quantity} szt.</p><strong>{p&&priceOf(p)!=null?money(i.quantity*priceOf(p)!):'Cena do potwierdzenia'}</strong></div></div>})}</div><div className="summary-lines"><p><span>Produkty</span><strong>{money(subtotal)}</strong></p><p><span>Dostawa InPost{payment==='cod'?' za pobraniem':''}</span><strong>{money(shipping)}</strong></p><p className="summary-total"><span>Razem</span><strong>{money(subtotal+shipping)}</strong></p></div><div className="summary-note"><Check size={18}/><p>Pełna kwota, bez niespodzianek. Dostawa za pobraniem obejmuje już opłatę za pobranie.</p></div></aside>
     </div>}
   </>}</main></>;
 }

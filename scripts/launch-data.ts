@@ -43,5 +43,18 @@ if (process.env.VERCEL_ENV === 'production' && process.env.DATABASE_URL) {
     await c.query('INSERT INTO shop_data_migrations(id) VALUES($1)',[id]);
     console.log('Public test checkout disabled; existing sale-readiness safeguards retained.');
   });
+  await transaction(async c => {
+    const id='inpost-product-details-2026-10-21';
+    await c.query('SELECT pg_advisory_xact_lock(hashtext($1))',[id]);
+    if((await c.query('SELECT id FROM shop_data_migrations WHERE id=$1',[id])).rows.length)return;
+    for(const p of seedProducts){
+      const {manufacturer,manufacturerAddress,manufacturerEmail,manufacturerCountry,baseGarment,safetyInfo,composition,gpsrReady}=p;
+      await c.query('UPDATE shop_products SET data=data || $2::jsonb WHERE id=$1',[p.id,JSON.stringify({manufacturer,manufacturerAddress,manufacturerEmail,manufacturerCountry,baseGarment,safetyInfo,composition,gpsrReady})]);
+    }
+    // Configure authorized rates. Sales is activated through the validated admin service after deployment.
+    await c.query('UPDATE shop_settings SET data=data || $1::jsonb WHERE id=1',[JSON.stringify({testMode:false,codShippingPrice:2999,codSurcharge:0,courierCodConfirmed:true,lockerCodConfirmed:true,shippingReady:true,legalReady:true})]);
+    await c.query('INSERT INTO shop_data_migrations(id) VALUES($1)',[id]);
+    console.log('InPost COD rates and owner-confirmed product manufacturer details saved.');
+  });
   await db().end();
 }

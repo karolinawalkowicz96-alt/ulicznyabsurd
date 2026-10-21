@@ -1,3 +1,4 @@
+import { shippingTotal } from './shop-shipping';
 import { legalContractText, legalVersion } from './legal-contract';
 import { randomBytes, randomUUID } from 'node:crypto';
 import { z } from 'zod';
@@ -70,12 +71,12 @@ export async function createOrder(raw:unknown){
       if(price===null||(!settings.testMode&&!p.priceApproved))throw new Error('Cena produktu nie jest zatwierdzona.');if(stock===null||stock<item.quantity)throw new Error('Niewystarczająca liczba sztuk wybranego rozmiaru.');
       await c.query(`UPDATE shop_variants SET ${settings.testMode?'test_stock':'stock'}=${settings.testMode?'test_stock':'stock'}-$3 WHERE product_id=$1 AND size=$2`,[item.id,item.size,item.quantity]);items.push({...item,name:p.name,image:p.image,price});
     }
-    const subtotal=items.reduce((n,i)=>n+i.price*i.quantity,0);const shipping=ship+(input.payment==='cod'?settings.codSurcharge:0);
+    const subtotal=items.reduce((n,i)=>n+i.price*i.quantity,0);const shipping=shippingTotal(settings,input.delivery,input.payment,settings.testMode);
     if(input.expectedTotal!==undefined&&input.expectedTotal!==subtotal+shipping)throw new Error('Cena lub dostawa uległa zmianie. Odśwież koszyk i potwierdź nową kwotę.');
     const token=randomBytes(32).toString('hex');const now=new Date().toISOString();
-    const order:ShopOrder={id:randomUUID(),number:`${settings.testMode?'TEST':'UA'}-${now.slice(0,10).replaceAll('-','')}-${randomBytes(5).toString('hex').toUpperCase()}`,token,legalText:legalContractText,legalVersion,sellerPhone:settings.sellerPhone,fulfillmentDays:settings.fulfillmentDays,createdAt:now,testMode:settings.testMode,customer:input.customer,items,subtotal,shipping,total:subtotal+shipping,delivery:input.delivery,payment:input.payment,status:'new',paymentStatus:'unpaid',shippingStatus:'pending',returnStatus:'none',trackingNumber:'',carrier:'',history:[{at:now,action:`Złożono zamówienie. ${input.payment==='cod'?'Płatność za pobraniem':'Stripe'}: nieopłacone. Regulamin: ${legalVersion}.`}],notificationStatus:settings.testMode?'test_not_sent':process.env.RESEND_API_KEY&&process.env.EMAIL_FROM?'pending':'not_configured',stockRestored:false};
+    const order:ShopOrder={id:randomUUID(),number:`${settings.testMode?'TEST':'UA'}-${now.slice(0,10).replaceAll('-','')}-${randomBytes(5).toString('hex').toUpperCase()}`,token,legalText:legalContractText,legalVersion,sellerPhone:settings.sellerPhone,fulfillmentDays:settings.fulfillmentDays,createdAt:now,testMode:settings.testMode,customer:input.customer,items,subtotal,shipping,total:subtotal+shipping,delivery:input.delivery,payment:input.payment,status:'new',paymentStatus:'unpaid',shippingStatus:'pending',returnStatus:'none',trackingNumber:'',carrier:'InPost',history:[{at:now,action:`Złożono zamówienie. ${input.payment==='cod'?'Płatność za pobraniem':'Stripe'}: nieopłacone. Regulamin: ${legalVersion}.`}],notificationStatus:settings.testMode?'test_not_sent':process.env.RESEND_API_KEY&&process.env.EMAIL_FROM?'pending':'not_configured',stockRestored:false};
     await c.query('INSERT INTO shop_orders(id,number,token_hash,idempotency_key,request_hash,data) VALUES($1,$2,$3,$4,$5,$6)',[order.id,order.number,hash(token),input.idempotencyKey,requestHash,JSON.stringify(order)]);
-    if(!settings.testMode)for(const recipient of [input.customer.email,'ulicznyabsurd@gmail.com'])await c.query('INSERT INTO shop_outbox(id,order_id,recipient,event) VALUES($1,$2,$3,$4)',[randomUUID(),order.id,recipient,'new']);
+    if(!settings.testMode)for(const recipient of new Set([input.customer.email.toLowerCase(),'ulicznyabsurd@gmail.com']))await c.query('INSERT INTO shop_outbox(id,order_id,recipient,event) VALUES($1,$2,$3,$4)',[randomUUID(),order.id,recipient,'new']);
     return order;
   });
 }

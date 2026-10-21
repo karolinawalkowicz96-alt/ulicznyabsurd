@@ -1,22 +1,22 @@
 // Snapshot attached to each real order confirmation. Keep synchronized with the public legal pages.
-export const legalVersion = '2026-10-20';
+export const legalVersion = '2026-10-21';
 export const legalContractText = `ULICZNY ABSURD — WARUNKI UMOWY
-Wersja: 20 października 2026 r.
+Wersja: 21 października 2026 r.
 
 SPRZEDAWCA
 Paweł Duszyński
 ul. Północna 24/2, 44-335 Jastrzębie-Zdrój, Polska
 sprzedaż w ramach działalności nierejestrowanej
 E-mail: ulicznyabsurd@gmail.com
-Telefon: podany w podsumowaniu konkretnego zamówienia i na stronie sklepu po uruchomieniu sprzedaży.
+Telefon: +48 513 258 296.
 
 1. ZAMÓWIENIE I UMOWA
 Sklep sprzedaje koszulki z gotowymi wzorami. Przed wysłaniem zamówienia klient otrzymuje informacje o produkcie, cenie, aktywnych metodach i kosztach dostawy, płatności, danych sprzedawcy i prawie odstąpienia. Przycisk kończący rzeczywisty checkout brzmi „Zamawiam z obowiązkiem zapłaty”. Umowa zostaje zawarta po poprawnym zapisaniu zamówienia i wyświetleniu potwierdzenia z numerem zamówienia.
 
-Cena i dostępność są ponownie sprawdzane po stronie serwera. Koszt dostawy i ewentualna dopłata za pobranie stanowią część kwoty widocznej przed złożeniem zamówienia. Koszt dostawy: paczkomat 14,99 zł, kurier 18,99 zł, wysyłka zagraniczna 119 zł. Dostępność dostawy do wybranego kraju jest potwierdzana przed zakupem.
+Cena i dostępność są ponownie sprawdzane po stronie serwera. Koszt dostawy i ewentualna dopłata za pobranie stanowią część kwoty widocznej przed złożeniem zamówienia. Dostawa wyłącznie w Polsce przez InPost: kurierem lub do automatu Paczkomat®. Łączny koszt wysyłki za pobraniem wynosi 29,99 zł i obejmuje już opłatę za pobranie.
 
 2. PŁATNOŚĆ I DOSTAWA
-Pobranie jest dostępne tylko dla metody dostawy, dla której sprzedawca potwierdził tę usługę z przewoźnikiem. Płatność online jest realizowana przez Stripe po rzeczywistym uruchomieniu integracji. Dostępne metody płatności pokazuje operator dla konkretnej transakcji; sklep nie gwarantuje BLIKA ani innej metody, jeśli nie jest aktywna na koncie. Status płatności Stripe jest uzgadniany na podstawie potwierdzenia serwerowego operatora.
+Pobranie jest dostępne dla kuriera InPost i automatu Paczkomat®. Kwotę za produkty i dostawę opłacasz przy odbiorze. W automacie Paczkomat® zapłata odbywa się bezgotówkowo przed otwarciem skrytki, zgodnie z instrukcją InPost. Płatność online jest realizowana przez Stripe po rzeczywistym uruchomieniu integracji. Dostępne metody płatności pokazuje operator dla konkretnej transakcji; sklep nie gwarantuje BLIKA ani innej metody, jeśli nie jest aktywna na koncie. Status płatności Stripe jest uzgadniany na podstawie potwierdzenia serwerowego operatora.
 
 Czas realizacji zamówienia wynosi 7 dni roboczych. Do tego należy doliczyć czas transportu zależny od przewoźnika i kraju dostawy. Klient powinien podać prawidłowy adres albo identyfikator automatu paczkowego oraz dane kontaktowe potrzebne do doręczenia.
 

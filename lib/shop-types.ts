@@ -6,7 +6,7 @@ export type ShopProduct = {
   bestseller:boolean;isNew:boolean;seoTitle:string;seoDescription:string;material:string;care:string;
   manufacturer?:string;manufacturerAddress?:string;manufacturerEmail?:string;manufacturerCountry?:string;
   responsiblePerson?:string;responsiblePersonAddress?:string;responsiblePersonEmail?:string;
-  composition?:string;safetyInfo?:string;gpsrReady?:boolean;
+  baseGarment?:string;composition?:string;safetyInfo?:string;gpsrReady?:boolean;
   variants:{size:ShopSize;stock:number|null;available?:boolean;effectiveStock?:number|null}[];
   effectivePrice?:number|null;testPrice?:number;
 };
@@ -14,7 +14,7 @@ export type ShopSettings = {
   sellerPhone?:string;fulfillmentDays?:number;legalReady?:boolean;sizeChartApproved?:boolean;shippingReady?:boolean;
   testMode:boolean;salesActive:boolean;codActive:boolean;stripeActive:boolean;
   courierActive:boolean;lockerActive:boolean;courierPrice:number;lockerPrice:number;
-  courierCodConfirmed:boolean;lockerCodConfirmed:boolean;internationalCodConfirmed:boolean;codSurcharge:number;
+  courierCodConfirmed:boolean;lockerCodConfirmed:boolean;internationalCodConfirmed:boolean;codSurcharge:number;codShippingPrice?:number;
   quarterlyLimit:number;instagram:number;facebook:number;youtube:number;tiktok:number;views:number;statsUpdated:string;
 };
 export const orderStatuses=['new','confirmed','processing','packed','shipped','delivered','completed','cancelled','returned'] as const;

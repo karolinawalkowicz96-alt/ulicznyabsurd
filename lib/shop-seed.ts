@@ -4,7 +4,7 @@ export const seedProducts:ShopProduct[]=entries.map(([id,slug,name,image,descrip
   id,slug,name,image,description,images:[image],price:7999,priceApproved:true,active:true,hidden:false,soldOut:false,sortOrder:['oko-01','glowka-04','paliwko-07','zawodowcy-05','noc-02','ceny-08','szef-03','dom-06'].indexOf(id),bestseller:false,isNew:false,
   seoTitle:`${name} — koszulka z nadrukiem | Uliczny Absurd`,seoDescription:description,
   material:'100% bawełna · 185 g/m²',care:'Pranie do 40°C. Prasowanie i suszenie w suszarce bębnowej zgodnie z metką produktu. Nadruk prasuj na lewej stronie, unikając bezpośredniego kontaktu z żelazkiem.',
-  manufacturer:'',manufacturerAddress:'',manufacturerEmail:'',manufacturerCountry:'',responsiblePerson:'',responsiblePersonAddress:'',responsiblePersonEmail:'',composition:'100% bawełna; gramatura 185 g/m² (biała koszulka)',safetyInfo:'',gpsrReady:false,
+  manufacturer:'ULICZNY ABSURD — Paweł Duszyński',manufacturerAddress:'ul. Północna 24/2, 44-335 Jastrzębie-Zdrój, Polska',manufacturerEmail:'ulicznyabsurd@gmail.com',manufacturerCountry:'PL',responsiblePerson:'',responsiblePersonAddress:'',responsiblePersonEmail:'',composition:'100% bawełna; gramatura 185 g/m² (biała koszulka)',baseGarment:'B&C Collection #E190 (TU03T), The Cotton Group SA, Drève Richelle 161 O – Box 5, 1410 Waterloo, Belgia. Nadruk wykonuje ULICZNY ABSURD.',safetyInfo:'Odzież codzienna. Stosuj się do instrukcji pielęgnacji na metce. Nie prasuj bezpośrednio po nadruku. Opakowanie przechowuj poza zasięgiem małych dzieci.',gpsrReady:true,
   variants:shopSizes.map(size=>({size,stock:null}))
 })).sort((a,b)=>a.sortOrder-b.sortOrder);
 export const defaultSettings:ShopSettings={
