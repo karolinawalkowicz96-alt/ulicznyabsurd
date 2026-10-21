@@ -26,5 +26,13 @@ if (process.env.VERCEL_ENV === 'production' && process.env.DATABASE_URL) {
     await c.query('INSERT INTO shop_data_migrations(id) VALUES($1)',[id]);
     console.log('Storefront pricing, ordering and delivery updated; payment activation remains pending.');
   });
+  await transaction(async c => {
+    const id='cod-test-checkout-2026-10-21';
+    await c.query('SELECT pg_advisory_xact_lock(hashtext($1))',[id]);
+    if((await c.query('SELECT id FROM shop_data_migrations WHERE id=$1',[id])).rows.length)return;
+    await c.query('UPDATE shop_settings SET data=data || $1::jsonb WHERE id=1',[JSON.stringify({testMode:true,salesActive:false,codActive:true,stripeActive:false})]);
+    await c.query('INSERT INTO shop_data_migrations(id) VALUES($1)',[id]);
+    console.log('Test COD checkout enabled; live sales remain disabled.');
+  });
   await db().end();
 }

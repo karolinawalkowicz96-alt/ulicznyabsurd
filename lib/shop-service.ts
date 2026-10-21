@@ -26,7 +26,7 @@ export async function getCatalog(includeHidden=false){
 export const orderInput=z.object({
   idempotencyKey:z.string().uuid(),items:z.array(z.object({id:z.string().min(1).max(100),size:z.enum(shopSizes),quantity:z.number().int().min(1).max(20)})).min(1).max(50),
   customer:z.object({firstName:z.string().trim().min(2).max(80),lastName:z.string().trim().min(2).max(80),email:z.string().email().max(200),phone:z.string().regex(/^[+\d ()-]{7,20}$/),country:z.string().regex(/^[A-Z]{2}$/),street:z.string().trim().max(200).optional(),postalCode:z.string().trim().min(2).max(20),city:z.string().trim().min(2).max(100),locker:z.string().trim().max(40).optional(),notes:z.string().max(2000).optional(),invoice:z.string().max(1000).optional()}),
-  delivery:z.enum(['courier','locker','international']),payment:z.enum(['cod','stripe']),expectedTotal:z.number().int().nonnegative().optional(),acceptedTerms:z.literal(true)
+  delivery:z.enum(['courier','locker','international']),payment:z.enum(['cod','stripe']),expectedTotal:z.number().int().nonnegative().optional(),acceptedTerms:z.literal(true),testAcknowledged:z.boolean().optional()
 });
 const euCountries=new Set(['AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IE','IT','LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE']);
 function productReadyForSale(p:ShopProduct){
@@ -44,6 +44,7 @@ export async function createOrder(raw:unknown){
     const stored=(await c.query('SELECT data FROM shop_settings WHERE id=1 FOR SHARE')).rows[0]?.data;
     if(!stored)throw new Error('Najpierw uruchom migrację i seed.');
     const settings={...defaultSettings,...stored} as ShopSettings;
+    if(settings.testMode&&(input.payment!=='cod'||input.testAcknowledged!==true))throw new Error('Potwierdź próbne zamówienie za pobraniem — bez wysyłki i bez obowiązku zapłaty.');
     if(!settings.testMode&&!settings.salesActive)throw new Error('Sprzedaż jest obecnie wyłączona.');
     if(input.payment==='cod'&&!settings.testMode&&!settings.codActive)throw new Error('Płatność za pobraniem jest wyłączona.');
     if(input.payment==='stripe'&&(!settings.stripeActive||!process.env.STRIPE_SECRET_KEY||!process.env.STRIPE_WEBHOOK_SECRET))throw new Error('Płatności online nie są skonfigurowane.');
