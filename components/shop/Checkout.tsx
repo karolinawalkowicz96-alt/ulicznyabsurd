@@ -55,16 +55,16 @@ export default function Checkout(){
     <div className="checkout-heading"><div><h1>JESZCZE CHWILA.<br/>I NOSISZ ABSURD.</h1><p>Sprawdź dane, wybierz dostawę i płatność. Przed złożeniem zamówienia zobaczysz pełną kwotę.</p></div></div>
 
     {catalogReady&&!catalog.configured&&<p className="error">Sklep oczekuje na konfigurację bazy danych. Zamówienia są tymczasowo niedostępne.</p>}
-    {catalogReady&&!test&&!Boolean(settings.salesActive)&&<p className="form-notice">Płatności online wkrótce dostępne. W sprawie koszulek napisz na <a href="mailto:ulicznyabsurd@gmail.com">ulicznyabsurd@gmail.com</a>.</p>}
+    {catalogReady&&!test&&!Boolean(settings.salesActive)&&<p className="form-notice">Zamówienia są chwilowo niedostępne. Skontaktuj się z nami: <a href="mailto:ulicznyabsurd@gmail.com">ulicznyabsurd@gmail.com</a>.</p>}
     {!ready||!catalogReady?<p role="status">Wczytywanie sklepu i koszyka…</p>:!items.length?<div className="checkout-empty"><ShoppingBag size={46}/><h2>Koszyk jest pusty.</h2><Link className="button dark" href="/#kolekcja">Wybierz koszulkę</Link></div>:<div className="shop-checkout-grid">
       <form className="checkout-form" onSubmit={submit}>
-        <section className="checkout-card"><div className="checkout-card-title"><span>01</span><div><h2>Dane do dostawy</h2><p>Dostawy na start realizujemy wyłącznie w Polsce.</p></div></div>
+        <section className="checkout-card"><div className="checkout-card-title"><span>01</span><div><h2>Dane do dostawy</h2><p>Dostarczamy na terenie Polski.</p></div></div>
           <div className="form-row"><label>Imię<input name="firstName" required minLength={2} maxLength={80} autoComplete="given-name"/></label><label>Nazwisko<input name="lastName" required minLength={2} maxLength={80} autoComplete="family-name"/></label></div>
           <div className="form-row"><label>E-mail<input name="email" type="email" required maxLength={200} autoComplete="email"/></label><label>Telefon<input name="phone" type="tel" required pattern="[+0-9 ()\-]{7,20}" autoComplete="tel"/></label></div>
           <div className="country-static"><MapPin size={18}/><span><small>Kraj dostawy</small><strong>Polska</strong></span></div>
         </section>
 
-        <section className="checkout-card"><div className="checkout-card-title"><span>02</span><div><h2>Dostawa</h2><p>Wybierz tylko spośród metod rzeczywiście aktywnych w sklepie.</p></div></div>
+        <section className="checkout-card"><div className="checkout-card-title"><span>02</span><div><h2>Dostawa</h2><p>Wybierz wygodny sposób odbioru.</p></div></div>
           <div className="choice-grid" role="radiogroup" aria-label="Metoda dostawy">
             {courierActive&&<Choice checked={delivery==='courier'} onChange={()=>setDelivery('courier')} name="delivery" value="courier" title="Kurier" meta={money(test?1899:Number(settings.courierPrice)||0)} icon={<PackageCheck/>}/>}
             {lockerActive&&<Choice checked={delivery==='locker'} onChange={()=>setDelivery('locker')} name="delivery" value="locker" title="Automat paczkowy" meta={money(test?1499:Number(settings.lockerPrice)||0)} icon={<MapPin/>}/>}
@@ -77,7 +77,7 @@ export default function Checkout(){
         </section>
 
         <section className="checkout-card"><div className="checkout-card-title"><span>03</span><div><h2>Płatność</h2><p>{test?'Zamówienie próbne — bez pobierania płatności.':'Wybierz sposób płatności.'}</p></div></div>
-          {!stripeActive&&<div className="product-payment-note"><CreditCard size={20} aria-hidden="true"/><p><strong>Płatności online wkrótce dostępne</strong><small>Uruchamiamy płatności przez Stripe.</small></p></div>}<div className="choice-grid" role="radiogroup" aria-label="Metoda płatności">
+          <div className="choice-grid" role="radiogroup" aria-label="Metoda płatności">
             {codActive&&<Choice checked={payment==='cod'} onChange={()=>setPayment('cod')} name="payment" value="cod" title={test?'Za pobraniem — próba':'Za pobraniem'} meta={Number(settings.codSurcharge)>0?`+ ${money(Number(settings.codSurcharge))}`:(test?'bez płatności i wysyłki':'przy odbiorze')} icon={<PackageCheck/>}/>}
             {stripeActive&&<Choice checked={payment==='stripe'} onChange={()=>setPayment('stripe')} name="payment" value="stripe" title="Płatność online" meta="Stripe · dostępne metody konta" icon={<CreditCard/>}/>}
           </div>

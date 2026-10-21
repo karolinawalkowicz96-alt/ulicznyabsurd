@@ -13,7 +13,7 @@ const origin='https://www.ulicznyabsurd.pl';
 export const metadata:Metadata={
   metadataBase:new URL(origin),
   title:{default:'Śmieszne koszulki z nadrukiem | Uliczny Absurd',template:'%s | Uliczny Absurd'},
-  description:'Koszulki z zabawnymi napisami i oryginalnymi ilustracjami Uliczny Absurd. Poznaj kolekcję, sprawdź rozmiary i znajdź pomysł na prezent z humorem.',
+  description:'Śmieszne koszulki z nadrukiem — idealne na prezent z humorem. Oryginalne wzory Uliczny Absurd, 100% bawełna i rozmiary S–XXL. Wybierz swój absurd.',
   alternates:{canonical:'/'},
   robots:{index:process.env.SEO_INDEXABLE==='true',follow:true,'max-image-preview':'large'},
   openGraph:{title:'Uliczny Absurd — śmieszne koszulki z nadrukiem',description:'Nosi się niepoważnie. Oryginalne koszulki z humorem.',url:origin,siteName:'Uliczny Absurd',locale:'pl_PL',type:'website',images:[{url:'/koszulka.webp',width:1215,height:1295}]},
