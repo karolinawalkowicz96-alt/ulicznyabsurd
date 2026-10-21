@@ -1,3 +1,4 @@
+export const maxDuration = 60;
 import { after } from 'next/server';
 import { retryNotifications } from '@/lib/shop-mail';
 import { verifySignature } from '@/lib/checkout';

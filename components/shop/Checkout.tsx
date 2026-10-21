@@ -12,9 +12,9 @@ export default function Checkout(){
   const {items,setItems,catalog,setCatalog,ready,catalogReady}=useShop();
   const settings=catalog.settings;
   const test=Boolean(settings.testMode);
-  const courierActive=test||Boolean(settings.courierActive);
-  const lockerActive=test||Boolean(settings.lockerActive);
-  const codActive=test||Boolean(settings.codActive);
+  const courierActive=Boolean(settings.courierActive);
+  const lockerActive=Boolean(settings.lockerActive);
+  const codActive=Boolean(settings.codActive);
   const stripeActive=Boolean(settings.stripeActive);
   const [delivery,setDelivery]=useState<'courier'|'locker'>('courier');
   const [payment,setPayment]=useState<'cod'|'stripe'>('cod');
@@ -23,7 +23,7 @@ export default function Checkout(){
   useEffect(()=>{if(!courierActive&&lockerActive)setDelivery('locker');if(!codActive&&stripeActive)setPayment('stripe');},[courierActive,lockerActive,codActive,stripeActive]);
   // Receipt loading begins after reading the browser URL; synchronize the initial loading indicator.
   // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(()=>{const token=new URLSearchParams(location.search).get('token');if(token){setLoadingOrder(true);fetch(`/api/shop/orders?token=${encodeURIComponent(token)}`,{cache:'no-store'}).then(async r=>{const d=await r.json() as {order:ShopOrder;error?:string};if(!r.ok)throw Error(d.error||'Nie można odczytać zamówienia.');setOrder(d.order);if(d.order.payment==='stripe'&&d.order.paymentStatus==='paid')setItems([]);}).catch(e=>setError(e.message)).finally(()=>setLoadingOrder(false));}},[setItems]);
+  useEffect(()=>{const token=new URLSearchParams(location.search).get('token');if(token){setLoadingOrder(true);fetch(`/api/shop/orders?token=${encodeURIComponent(token)}`,{cache:'no-store'}).then(async r=>{const d=await r.json() as {order:ShopOrder;error?:string};if(!r.ok)throw Error(d.error||'Nie można odczytać zamówienia.');if(d.order.testMode)throw Error('To potwierdzenie nie jest dostępne. Skontaktuj się ze sklepem.');setOrder(d.order);if(d.order.payment==='stripe'&&d.order.paymentStatus==='paid')setItems([]);}).catch(e=>setError(e.message)).finally(()=>setLoadingOrder(false));}},[setItems]);
 
   const subtotal=useMemo(()=>items.reduce((s,i)=>s+i.quantity*(priceOf(catalog.products.find(p=>p.id===i.id)||{price:0} as never)||0),0),[items,catalog.products]);
   const baseShipping=test?(delivery==='locker'?1499:1899):Number(delivery==='locker'?settings.lockerPrice:settings.courierPrice)||0;
@@ -31,7 +31,7 @@ export default function Checkout(){
   const codConfirmed=test||Boolean(delivery==='locker'?settings.lockerCodConfirmed:settings.courierCodConfirmed);
   const deliveryAvailable=delivery==='locker'?lockerActive:courierActive;
   const paymentAvailable=payment==='cod'?codActive&&codConfirmed:stripeActive;
-  const checkoutAvailable=catalog.configured&&deliveryAvailable&&paymentAvailable&&(test||Boolean(settings.salesActive));
+  const checkoutAvailable=catalog.configured&&!test&&deliveryAvailable&&paymentAvailable&&Boolean(settings.salesActive);
 
   async function submit(e:React.FormEvent<HTMLFormElement>){
     e.preventDefault();if(busy||!checkoutAvailable)return;setError('');setBusy(true);
@@ -52,10 +52,10 @@ export default function Checkout(){
 
   return <><ShopHeader/><main className="section shop-checkout"><div className="checkout-top"><span className="eyebrow">ULICZNY ABSURD / ZAMÓWIENIE</span><div className="checkout-steps" aria-label="Etapy zamówienia"><span className="done"><b>01</b>Koszyk</span><span className={order?'done':'active'}><b>02</b>Dostawa i płatność</span><span className={order?'active':''}><b>03</b>Potwierdzenie</span></div></div>
   {loadingOrder?<p role="status">Wczytujemy zamówienie…</p>:order?<Confirmation order={order} busy={busy} retryPayment={retryPayment}/>:<>
-    <div className="checkout-heading"><div><h1>JESZCZE CHWILA.<br/>I NOSISZ ABSURD.</h1><p>Sprawdź dane, wybierz dostawę i płatność. Przed złożeniem zamówienia zobaczysz pełną kwotę.</p></div>{test&&<span className="checkout-test-badge">TRYB TESTOWY</span>}</div>
-    {test&&<p className="form-notice">To środowisko testowe. Zamówienia nie są realizowane, płatności produkcyjne nie powinny być tu używane.</p>}
+    <div className="checkout-heading"><div><h1>JESZCZE CHWILA.<br/>I NOSISZ ABSURD.</h1><p>Sprawdź dane, wybierz dostawę i płatność. Przed złożeniem zamówienia zobaczysz pełną kwotę.</p></div></div>
+
     {catalogReady&&!catalog.configured&&<p className="error">Sklep oczekuje na konfigurację bazy danych. Zamówienia są tymczasowo niedostępne.</p>}
-    {catalogReady&&!test&&!Boolean(settings.salesActive)&&<p className="error">Sprzedaż nie została jeszcze uruchomiona.</p>}
+    {catalogReady&&(test||!Boolean(settings.salesActive))&&<p className="form-notice">Płatności online wkrótce dostępne. W sprawie koszulek napisz na <a href="mailto:ulicznyabsurd@gmail.com">ulicznyabsurd@gmail.com</a>.</p>}
     {!ready||!catalogReady?<p role="status">Wczytywanie sklepu i koszyka…</p>:!items.length?<div className="checkout-empty"><ShoppingBag size={46}/><h2>Koszyk jest pusty.</h2><Link className="button dark" href="/#kolekcja">Wybierz koszulkę</Link></div>:<div className="shop-checkout-grid">
       <form className="checkout-form" onSubmit={submit}>
         <section className="checkout-card"><div className="checkout-card-title"><span>01</span><div><h2>Dane do dostawy</h2><p>Dostawy na start realizujemy wyłącznie w Polsce.</p></div></div>
@@ -66,8 +66,8 @@ export default function Checkout(){
 
         <section className="checkout-card"><div className="checkout-card-title"><span>02</span><div><h2>Dostawa</h2><p>Wybierz tylko spośród metod rzeczywiście aktywnych w sklepie.</p></div></div>
           <div className="choice-grid" role="radiogroup" aria-label="Metoda dostawy">
-            {courierActive&&<Choice checked={delivery==='courier'} onChange={()=>setDelivery('courier')} name="delivery" value="courier" title="Kurier" meta={money(test?1899:Number(settings.courierPrice)||0)} icon={<PackageCheck/>}/>} 
-            {lockerActive&&<Choice checked={delivery==='locker'} onChange={()=>setDelivery('locker')} name="delivery" value="locker" title="Automat paczkowy" meta={money(test?1499:Number(settings.lockerPrice)||0)} icon={<MapPin/>}/>} 
+            {courierActive&&<Choice checked={delivery==='courier'} onChange={()=>setDelivery('courier')} name="delivery" value="courier" title="Kurier" meta={money(test?1899:Number(settings.courierPrice)||0)} icon={<PackageCheck/>}/>}
+            {lockerActive&&<Choice checked={delivery==='locker'} onChange={()=>setDelivery('locker')} name="delivery" value="locker" title="Automat paczkowy" meta={money(test?1499:Number(settings.lockerPrice)||0)} icon={<MapPin/>}/>}
           </div>
           {!courierActive&&!lockerActive&&<p className="error">Sprzedawca nie aktywował jeszcze żadnej zweryfikowanej metody dostawy.</p>}
           {delivery==='locker'?<label>Identyfikator automatu paczkowego<input name="locker" required minLength={3} maxLength={30} placeholder="Np. WAW01M" autoComplete="off"/></label>:<label>Ulica, numer budynku / lokalu<input name="street" required maxLength={200} autoComplete="street-address"/></label>}
@@ -78,8 +78,8 @@ export default function Checkout(){
 
         <section className="checkout-card"><div className="checkout-card-title"><span>03</span><div><h2>Płatność</h2><p>Nie pokazujemy metod, które nie są uruchomione.</p></div></div>
           <div className="choice-grid" role="radiogroup" aria-label="Metoda płatności">
-            {codActive&&<Choice checked={payment==='cod'} onChange={()=>setPayment('cod')} name="payment" value="cod" title="Za pobraniem" meta={Number(settings.codSurcharge)>0?`+ ${money(Number(settings.codSurcharge))}`:'przy odbiorze'} icon={<PackageCheck/>}/>} 
-            {stripeActive&&<Choice checked={payment==='stripe'} onChange={()=>setPayment('stripe')} name="payment" value="stripe" title="Płatność online" meta="Stripe · dostępne metody konta" icon={<CreditCard/>}/>} 
+            {codActive&&<Choice checked={payment==='cod'} onChange={()=>setPayment('cod')} name="payment" value="cod" title="Za pobraniem" meta={Number(settings.codSurcharge)>0?`+ ${money(Number(settings.codSurcharge))}`:'przy odbiorze'} icon={<PackageCheck/>}/>}
+            {stripeActive&&<Choice checked={payment==='stripe'} onChange={()=>setPayment('stripe')} name="payment" value="stripe" title="Płatność online" meta="Stripe · dostępne metody konta" icon={<CreditCard/>}/>}
           </div>
           {!codActive&&!stripeActive&&<p className="error">Brak aktywnej metody płatności.</p>}
           {payment==='cod'&&!codConfirmed&&<p className="error">Pobranie dla tej metody dostawy nie zostało potwierdzone z przewoźnikiem.</p>}
@@ -88,11 +88,11 @@ export default function Checkout(){
 
         <section className="checkout-card checkout-legal"><div className="checkout-card-title"><span>04</span><div><h2>Przed zamówieniem</h2><p>Najważniejsze informacje o sprzedawcy i umowie.</p></div></div>
           <div className="seller-box"><strong>ULICZNY ABSURD — Paweł Duszyński</strong><span>ul. Północna 24/2, 44-335 Jastrzębie-Zdrój</span><a href="mailto:ulicznyabsurd@gmail.com">ulicznyabsurd@gmail.com</a>{settings.sellerPhone?<a href={`tel:${String(settings.sellerPhone)}`}>{String(settings.sellerPhone)}</a>:<span className="seller-missing">Telefon zostanie uzupełniony przed uruchomieniem sprzedaży.</span>}</div>
-          <p>{Number(settings.fulfillmentDays)>0?`Maksymalny termin dostarczenia: ${Number(settings.fulfillmentDays)} dni kalendarzowych.`:'Termin dostawy nie został jeszcze zatwierdzony — sprzedaż rzeczywista pozostaje zablokowana.'} Standardowe koszulki z gotowym wzorem podlegają ustawowemu prawu odstąpienia na zasadach opisanych w <Link href="/zwroty" target="_blank">informacji o zwrotach</Link>.</p>
+          <p>Czas realizacji: 7 dni roboczych. Do tego należy doliczyć czas transportu. Standardowe koszulki z gotowym wzorem podlegają ustawowemu prawu odstąpienia na zasadach opisanych w <Link href="/zwroty" target="_blank">informacji o zwrotach</Link>.</p>
           <label className="shop-checkbox"><input type="checkbox" name="acceptedTerms" required/><span>Zapoznałem/am się z <Link href="/regulamin" target="_blank">regulaminem sklepu</Link> i akceptuję jego warunki. <Link href="/prywatnosc" target="_blank">Polityka prywatności</Link> jest informacją o przetwarzaniu danych, a nie dodatkową zgodą.</span></label>
         </section>
         {error&&<p className="error" role="alert">{error}</p>}
-        <button className="button dark checkout-submit" disabled={busy||!checkoutAvailable} type="submit">{busy?'Zapisywanie…':test?'Złóż zamówienie testowe':'Zamawiam z obowiązkiem zapłaty'}</button>
+        <button className="button dark checkout-submit" disabled={busy||!checkoutAvailable} type="submit">{busy?'Zapisywanie…':'Zamawiam z obowiązkiem zapłaty'}</button>
         {!checkoutAvailable&&<p className="checkout-help">Przycisk pozostaje nieaktywny, dopóki sklep, dostawa i wybrana płatność nie są rzeczywiście dostępne.</p>}
       </form>
 
@@ -103,4 +103,4 @@ export default function Checkout(){
 
 function Choice({checked,onChange,name,value,title,meta,icon}:{checked:boolean;onChange:()=>void;name:string;value:string;title:string;meta:string;icon:React.ReactNode}){return <label className={`checkout-choice ${checked?'selected':''}`}><input type="radio" name={name} value={value} checked={checked} onChange={onChange}/><span className="choice-icon">{icon}</span><span><strong>{title}</strong><small>{meta}</small></span><i aria-hidden="true">{checked?'✓':''}</i></label>}
 
-function Confirmation({order,busy,retryPayment}:{order:ShopOrder;busy:boolean;retryPayment:()=>void}){return <section className="shop-confirmation"><div className="confirmation-mark"><Check size={40}/></div><span className="eyebrow">03 / POTWIERDZENIE</span><h1>{order.testMode?'TEST ZAKOŃCZONY.':'DZIĘKUJEMY!'}</h1><p className="confirmation-number">Numer zamówienia <strong>{order.number}</strong></p>{order.testMode&&<p className="form-notice">To zamówienie testowe. Nie będzie realizowane ani wysłane i nie uruchamia sprzedaży rzeczywistej.</p>}<div className="confirmation-grid"><div><small>Płatność</small><strong>{order.payment==='cod'?'Za pobraniem':'Online przez Stripe'}</strong><span>{statusLabel[order.paymentStatus]||order.paymentStatus}</span></div><div><small>Kwota</small><strong>{money(order.total)}</strong><span>{order.testMode?'kwota testowa':order.paymentStatus==='paid'?'zapłacono':order.payment==='cod'?'do zapłaty przy odbiorze':'do zapłaty online'}</span></div><div><small>Status</small><strong>{statusLabel[order.status]||order.status}</strong><span>przesyłka: {statusLabel[order.shippingStatus]||order.shippingStatus}</span></div></div>{order.payment==='stripe'&&order.paymentStatus==='unpaid'&&order.status!=='cancelled'&&!order.stockRestored&&<button className="button dark" disabled={busy} onClick={retryPayment}>{busy?'Otwieramy płatność…':'Przejdź do płatności Stripe'}</button>}{!order.testMode&&<p>{order.notificationStatus==='sent'?'Potwierdzenie warunków zamówienia zostało wysłane e-mailem.':'Zamówienie zapisano. Wiadomość e-mail oczekuje na wysłanie lub wymaga konfiguracji poczty.'}</p>}<div className="confirmation-items">{order.items.map(i=><div className="summary-item" key={i.id+i.size}><img src={i.image} alt=""/><div><h3>{i.name}</h3><p>Rozmiar {i.size} · {i.quantity} szt.</p><strong>{money(i.price*i.quantity)}</strong></div></div>)}</div><div className="summary-lines"><p><span>Produkty</span><strong>{money(order.subtotal)}</strong></p><p><span>Dostawa</span><strong>{money(order.shipping)}</strong></p><p className="summary-total"><span>Razem</span><strong>{money(order.total)}</strong></p></div><Link href="/#kolekcja" className="button dark">Wróć do kolekcji</Link></section>}
+function Confirmation({order,busy,retryPayment}:{order:ShopOrder;busy:boolean;retryPayment:()=>void}){return <section className="shop-confirmation"><div className="confirmation-mark"><Check size={40}/></div><span className="eyebrow">03 / POTWIERDZENIE</span><h1>DZIĘKUJEMY!</h1><p className="confirmation-number">Numer zamówienia <strong>{order.number}</strong></p><div className="confirmation-grid"><div><small>Płatność</small><strong>{order.payment==='cod'?'Za pobraniem':'Online przez Stripe'}</strong><span>{statusLabel[order.paymentStatus]||order.paymentStatus}</span></div><div><small>Kwota</small><strong>{money(order.total)}</strong><span>{order.paymentStatus==='paid'?'zapłacono':order.payment==='cod'?'do zapłaty przy odbiorze':'do zapłaty online'}</span></div><div><small>Status</small><strong>{statusLabel[order.status]||order.status}</strong><span>przesyłka: {statusLabel[order.shippingStatus]||order.shippingStatus}</span></div></div>{order.payment==='stripe'&&order.paymentStatus==='unpaid'&&order.status!=='cancelled'&&!order.stockRestored&&<button className="button dark" disabled={busy} onClick={retryPayment}>{busy?'Otwieramy płatność…':'Przejdź do płatności Stripe'}</button>}{!order.testMode&&<p>{order.notificationStatus==='sent'?'Potwierdzenie warunków zamówienia zostało wysłane e-mailem.':'Zamówienie zapisano. Potwierdzenie wyślemy e-mailem. W razie pytań napisz na ulicznyabsurd@gmail.com.'}</p>}<div className="confirmation-items">{order.items.map(i=><div className="summary-item" key={i.id+i.size}><img src={i.image} alt=""/><div><h3>{i.name}</h3><p>Rozmiar {i.size} · {i.quantity} szt.</p><strong>{money(i.price*i.quantity)}</strong></div></div>)}</div><div className="summary-lines"><p><span>Produkty</span><strong>{money(order.subtotal)}</strong></p><p><span>Dostawa</span><strong>{money(order.shipping)}</strong></p><p className="summary-total"><span>Razem</span><strong>{money(order.total)}</strong></p></div><Link href="/#kolekcja" className="button dark">Wróć do kolekcji</Link></section>}

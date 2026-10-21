@@ -1,6 +1,42 @@
-import { legalContractText, legalVersion } from './legal-contract';
-import { db,transaction } from './shop-db';
-import { ShopOrder } from './shop-types';
-const esc=(s:string)=>s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]!));
-const money=(n:number)=>(n/100).toFixed(2)+' zł';
-export async function retryNotifications(){if(!process.env.RESEND_API_KEY||!process.env.EMAIL_FROM)return {sent:0,status:'not_configured'};let sent=0;let failed=0;for(let i=0;i<20;i++){const job=await transaction(async c=>{const r=(await c.query("SELECT * FROM shop_outbox WHERE status IN ('pending','failed','sending') AND available_at<=now() AND attempts<10 ORDER BY available_at FOR UPDATE SKIP LOCKED LIMIT 1")).rows[0];if(!r)return null;await c.query("UPDATE shop_outbox SET status='sending',attempts=attempts+1,available_at=now()+interval '10 minutes' WHERE id=$1",[r.id]);return r;});if(!job)break;try{const order=(await db().query('SELECT data FROM shop_orders WHERE id=$1',[job.order_id])).rows[0].data as ShopOrder;if(order.testMode)throw new Error('Wysyłka testowego zamówienia zablokowana.');const title=job.event==='new'?(job.recipient==='ulicznyabsurd@gmail.com'?'Nowe zamówienie w sklepie':'Przyjęliśmy zamówienie'):job.event==='cancelled'?'Anulowanie zamówienia':job.event==='shipped'?'Twoja przesyłka została wysłana':'Aktualizacja zamówienia';const admin=job.recipient==='ulicznyabsurd@gmail.com';const html=`<div style="font-family:Arial;background:#fff;color:#111;padding:32px;max-width:640px"><h1>ULICZNY ABSURD</h1><h2>${title} ${esc(order.number)}</h2><p>Status: ${esc(order.status)}. ${order.payment==='cod'?'Pobranie':'Stripe'} — ${esc(order.paymentStatus)}.</p>${order.items.map(p=>`<p>${esc(p.name)} · ${p.size} × ${p.quantity} — ${money(p.price*p.quantity)}</p>`).join('')}<p>Dostawa: ${money(order.shipping)}. Razem: <b>${money(order.total)}</b></p><p>${esc(order.customer.firstName+' '+order.customer.lastName)}<br>${esc(order.customer.email)}<br>${esc(order.customer.phone)}<br>${esc(order.customer.street||order.customer.locker||'')}<br>${esc(order.customer.postalCode+' '+order.customer.city+' '+order.customer.country)}</p><p>${esc(order.customer.notes||'')}</p>${order.trackingNumber?`<p>Przewoźnik: ${esc(order.carrier)}. Numer: ${esc(order.trackingNumber)}</p>`:''}${admin?`<p><a href="${process.env.APP_URL||'https://www.ulicznyabsurd.pl'}/admin?order=${order.id}">Otwórz zamówienie</a></p>`:''}<hr><p>Paweł Duszyński · ul. Północna 24/2, 44-335 Jastrzębie-Zdrój<br>ulicznyabsurd@gmail.com${order.sellerPhone?'<br>'+esc(order.sellerPhone):''}</p></div>`;const response=await fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:`Bearer ${process.env.RESEND_API_KEY}`,'Content-Type':'application/json','Idempotency-Key':job.id},body:JSON.stringify({from:process.env.EMAIL_FROM,to:[job.recipient],reply_to:'ulicznyabsurd@gmail.com',subject:`${title} ${order.number}`,html,attachments:job.event==='new'?[{filename:`regulamin-i-odstapienie-${order.legalVersion||legalVersion}.txt`,content:Buffer.from((order.legalText||legalContractText)+`\n\nPODSUMOWANIE ZAMÓWIENIA ${order.number}\nData: ${order.createdAt}\nTelefon sprzedawcy: ${order.sellerPhone||'brak — sprzedaż rzeczywista nie powinna być aktywna'}\nMaksymalny termin dostarczenia: ${order.fulfillmentDays||'nieustalony'} dni kalendarzowych.\nMetoda dostawy: ${order.delivery}. Koszt dostawy i dopłat: ${money(order.shipping)}.\nPłatność: ${order.payment}. Produkty: ${money(order.subtotal)}. Razem: ${money(order.total)}.\n\nPozycje:\n${order.items.map(i=>`${i.name} / ${i.size} × ${i.quantity} — ${money(i.price*i.quantity)}`).join('\n')}`, 'utf8').toString('base64')}]:[]}),signal:AbortSignal.timeout(15000)});if(!response.ok)throw new Error(`Dostawca poczty: HTTP ${response.status}`);await db().query("UPDATE shop_outbox SET status='sent',sent_at=now(),error=NULL WHERE id=$1",[job.id]);await db().query("UPDATE shop_orders SET data=jsonb_set(data,'{notificationStatus}',to_jsonb('sent'::text)) WHERE id=$1 AND NOT EXISTS(SELECT 1 FROM shop_outbox WHERE order_id=$1 AND status<>'sent')",[job.order_id]);sent++;}catch(e){await db().query("UPDATE shop_outbox SET status='failed',error=$2,available_at=now()+interval '15 minutes' WHERE id=$1",[job.id,e instanceof Error?e.message:'Błąd poczty']);failed++;}}return {sent,failed,status:'processed'};}
+import { db, transaction } from './shop-db';
+import { orderEmail } from './shop-email-template';
+import type { ShopOrder } from './shop-types';
+
+export async function retryNotifications() {
+  if (!process.env.RESEND_API_KEY || !process.env.EMAIL_FROM) return {sent:0,status:'not_configured'};
+  let sent = 0, failed = 0;
+  const started = Date.now();
+  // Leave time for the last provider request and database update within the function budget.
+  for (let i = 0; i < 20 && Date.now() - started < 40000; i++) {
+    const job = await transaction(async c => {
+      const r = (await c.query("SELECT * FROM shop_outbox WHERE status IN ('pending','failed','sending') AND available_at<=now() AND attempts<10 ORDER BY available_at FOR UPDATE SKIP LOCKED LIMIT 1")).rows[0];
+      if (!r) return null;
+      const order = (await c.query('SELECT data FROM shop_orders WHERE id=$1',[r.order_id])).rows[0]?.data as ShopOrder | undefined;
+      if (!order || order.testMode) {
+        await c.query("UPDATE shop_outbox SET status='failed',attempts=10,error='Brak rzeczywistego zamówienia' WHERE id=$1",[r.id]);
+        return {blocked:true};
+      }
+      // Persist the exact payload: Resend rejects a changed body under the same idempotency key.
+      r.payload ||= JSON.stringify(orderEmail(order, r.event, r.recipient, process.env.EMAIL_FROM!));
+      await c.query("UPDATE shop_outbox SET status='sending',payload=$2,attempts=attempts+1,available_at=now()+interval '10 minutes' WHERE id=$1",[r.id,r.payload]);
+      return r;
+    });
+    if (!job) break;
+    if (job.blocked) { failed++; continue; }
+    try {
+      const response = await fetch('https://api.resend.com/emails', {
+        method:'POST', headers:{Authorization:`Bearer ${process.env.RESEND_API_KEY}`,'Content-Type':'application/json','Idempotency-Key':job.id},
+        body:job.payload, signal:AbortSignal.timeout(15000)
+      });
+      const result = await response.json().catch(() => null) as {id?:string} | null;
+      if (!response.ok || !result?.id) throw new Error(`Dostawca poczty: HTTP ${response.status}; brak potwierdzenia wysyłki`);
+      await db().query("UPDATE shop_outbox SET status='sent',sent_at=now(),provider_id=$2,error=NULL WHERE id=$1",[job.id,result.id]);
+      await db().query("UPDATE shop_orders SET data=jsonb_set(data,'{notificationStatus}',to_jsonb('sent'::text)) WHERE id=$1 AND NOT EXISTS(SELECT 1 FROM shop_outbox WHERE order_id=$1 AND status<>'sent')",[job.order_id]);
+      sent++;
+    } catch (e) {
+      await db().query("UPDATE shop_outbox SET status='failed',error=$2,available_at=now()+interval '15 minutes' WHERE id=$1",[job.id,e instanceof Error ? e.message : 'Błąd poczty']);
+      failed++;
+    }
+  }
+  return {sent,failed,status:'processed'};
+}

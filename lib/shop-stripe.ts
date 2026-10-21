@@ -22,7 +22,7 @@ export async function startStripePayment(id:string, token:string) {
     if(!settings?.stripeActive)throw new Error('Stripe jest wyłączony.');
     const base=(process.env.APP_URL||'http://localhost:3000').replace(/\/$/,'');
     const receipt=`${base}/zamowienie?id=${encodeURIComponent(id)}&token=${encodeURIComponent(token)}`;
-    const body=new URLSearchParams({mode:'payment',success_url:receipt,cancel_url:receipt,client_reference_id:id,'metadata[order_id]':id,'customer_email':order.customer.email,'automatic_payment_methods[enabled]':'true','shipping_options[0][shipping_rate_data][type]':'fixed_amount','shipping_options[0][shipping_rate_data][fixed_amount][amount]':String(order.shipping),'shipping_options[0][shipping_rate_data][fixed_amount][currency]':'pln','shipping_options[0][shipping_rate_data][display_name]':'Dostawa',expires_at:String(Math.floor(Date.now()/1000)+3600)});
+    const body=new URLSearchParams({mode:'payment',success_url:receipt,cancel_url:receipt,client_reference_id:id,'metadata[order_id]':id,'customer_email':order.customer.email,locale:'pl','shipping_options[0][shipping_rate_data][type]':'fixed_amount','shipping_options[0][shipping_rate_data][fixed_amount][amount]':String(order.shipping),'shipping_options[0][shipping_rate_data][fixed_amount][currency]':'pln','shipping_options[0][shipping_rate_data][display_name]':'Dostawa',expires_at:String(Math.floor(Date.now()/1000)+3600)});
     order.items.forEach((item,i)=>{body.set(`line_items[${i}][price_data][currency]`,'pln');body.set(`line_items[${i}][price_data][unit_amount]`,String(item.price));body.set(`line_items[${i}][price_data][product_data][name]`,`${item.name} / ${item.size}`);body.set(`line_items[${i}][quantity]`,String(item.quantity));});
     const session=await stripeRequest('checkout/sessions',body,`ua-session-${id}`);
     if(typeof session.id!=='string'||typeof session.url!=='string'||!session.url.startsWith('https://checkout.stripe.com/'))throw new Error('Nieprawidłowa odpowiedź operatora.');
@@ -47,7 +47,7 @@ export async function applyStripeEvent(event:{id:string;type:string;livemode:boo
     if(paid){if(order.stockRestored)throw new Error('Płatność wymaga ręcznego uzgodnienia magazynu.');order.paymentStatus='paid';order.history.push({at:new Date().toISOString(),action:'Stripe potwierdził płatność.'});}
     else {order.paymentStatus=event.type==='checkout.session.expired'?'expired':'failed';order.status='cancelled';if(!order.stockRestored){for(const i of [...order.items].sort((a,b)=>(a.id+a.size).localeCompare(b.id+b.size)))await c.query(`UPDATE shop_variants SET ${order.testMode?'test_stock':'stock'}=COALESCE(${order.testMode?'test_stock':'stock'},0)+$3 WHERE product_id=$1 AND size=$2`,[i.id,i.size,i.quantity]);order.stockRestored=true;}order.history.push({at:new Date().toISOString(),action:'Stripe: płatność wygasła lub nie powiodła się. Zwolniono towar.'});}
     await c.query('UPDATE shop_orders SET data=$2 WHERE id=$1',[order.id,JSON.stringify(order)]);
-    if(!order.testMode)await c.query('INSERT INTO shop_outbox(id,order_id,recipient,event) VALUES($1,$2,$3,$4)',[randomUUID(),order.id,order.customer.email,paid?'paid':'cancelled']);
+    if(!order.testMode)for(const recipient of new Set([order.customer.email,'ulicznyabsurd@gmail.com']))await c.query('INSERT INTO shop_outbox(id,order_id,recipient,event) VALUES($1,$2,$3,$4)',[randomUUID(),order.id,recipient,paid?'paid':'cancelled']);
     return 'ok';
   });
 }

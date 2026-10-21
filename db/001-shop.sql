@@ -9,3 +9,6 @@ CREATE TABLE IF NOT EXISTS shop_outbox (id uuid PRIMARY KEY, order_id uuid REFER
 CREATE TABLE IF NOT EXISTS shop_ledger (id uuid PRIMARY KEY, order_id uuid REFERENCES shop_orders(id), amount integer NOT NULL, recognized_at timestamptz NOT NULL DEFAULT now(), note text NOT NULL, test_mode boolean NOT NULL);
 CREATE INDEX IF NOT EXISTS shop_orders_created_idx ON shop_orders(created_at);
 CREATE INDEX IF NOT EXISTS shop_outbox_pending_idx ON shop_outbox(status,available_at);
+
+ALTER TABLE shop_outbox ADD COLUMN IF NOT EXISTS payload text;
+ALTER TABLE shop_outbox ADD COLUMN IF NOT EXISTS provider_id text;

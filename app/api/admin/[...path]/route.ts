@@ -1,3 +1,4 @@
+export const maxDuration = 60;
 import { after } from 'next/server';
 import { randomUUID } from 'node:crypto';
 import { put } from '@vercel/blob';

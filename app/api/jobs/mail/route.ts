@@ -1,3 +1,4 @@
+export const maxDuration = 60;
 import { timingSafeEqual } from 'node:crypto';
 import { retryNotifications } from '@/lib/shop-mail';
 export const runtime='nodejs';export const dynamic='force-dynamic';

@@ -11,14 +11,14 @@ E-mail: ulicznyabsurd@gmail.com
 Telefon: podany w podsumowaniu konkretnego zamówienia i na stronie sklepu po uruchomieniu sprzedaży.
 
 1. ZAMÓWIENIE I UMOWA
-Sklep sprzedaje koszulki z gotowymi wzorami. Przed wysłaniem zamówienia klient otrzymuje informacje o produkcie, cenie, aktywnych metodach i kosztach dostawy, płatności, danych sprzedawcy i prawie odstąpienia. Przycisk kończący rzeczywisty checkout brzmi „Zamawiam z obowiązkiem zapłaty”. Umowa zostaje zawarta po poprawnym zapisaniu zamówienia i wyświetleniu potwierdzenia z numerem zamówienia. Zamówienia TEST nie są rzeczywistymi umowami sprzedaży.
+Sklep sprzedaje koszulki z gotowymi wzorami. Przed wysłaniem zamówienia klient otrzymuje informacje o produkcie, cenie, aktywnych metodach i kosztach dostawy, płatności, danych sprzedawcy i prawie odstąpienia. Przycisk kończący rzeczywisty checkout brzmi „Zamawiam z obowiązkiem zapłaty”. Umowa zostaje zawarta po poprawnym zapisaniu zamówienia i wyświetleniu potwierdzenia z numerem zamówienia.
 
-Cena i dostępność są ponownie sprawdzane po stronie serwera. Koszt dostawy i ewentualna dopłata za pobranie stanowią część kwoty widocznej przed złożeniem zamówienia. Na start dostawa rzeczywista jest realizowana wyłącznie w Polsce i tylko metodami aktywowanymi przez sprzedawcę.
+Cena i dostępność są ponownie sprawdzane po stronie serwera. Koszt dostawy i ewentualna dopłata za pobranie stanowią część kwoty widocznej przed złożeniem zamówienia. Koszt dostawy: paczkomat 14,99 zł, kurier 18,99 zł, wysyłka zagraniczna 119 zł. Dostępność dostawy do wybranego kraju jest potwierdzana przed zakupem.
 
 2. PŁATNOŚĆ I DOSTAWA
 Pobranie jest dostępne tylko dla metody dostawy, dla której sprzedawca potwierdził tę usługę z przewoźnikiem. Płatność online jest realizowana przez Stripe po rzeczywistym uruchomieniu integracji. Dostępne metody płatności pokazuje operator dla konkretnej transakcji; sklep nie gwarantuje BLIKA ani innej metody, jeśli nie jest aktywna na koncie. Status płatności Stripe jest uzgadniany na podstawie potwierdzenia serwerowego operatora.
 
-Maksymalny termin dostarczenia dla konkretnego zamówienia jest zapisany w jego podsumowaniu. Klient powinien podać prawidłowy adres albo identyfikator automatu paczkowego oraz dane kontaktowe potrzebne do doręczenia.
+Czas realizacji zamówienia wynosi 7 dni roboczych. Do tego należy doliczyć czas transportu zależny od przewoźnika i kraju dostawy. Klient powinien podać prawidłowy adres albo identyfikator automatu paczkowego oraz dane kontaktowe potrzebne do doręczenia.
 
 3. ODSTĄPIENIE
 Konsument może co do zasady odstąpić od umowy zawartej przez internet bez podania przyczyny w ciągu 14 dni od objęcia towaru w posiadanie. Gotowy wzór nadruku ani wykonanie standardowej koszulki po złożeniu zamówienia nie wyłączają tego prawa. Sklep nie oferuje obecnie indywidualnej personalizacji według specyfikacji klienta.
