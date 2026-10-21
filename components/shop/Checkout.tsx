@@ -70,7 +70,7 @@ export default function Checkout(){
             {courierActive&&<Choice checked={delivery==='courier'} onChange={()=>setDelivery('courier')} name="delivery" value="courier" title="Kurier InPost" meta={`Standardowo ${money(shippingTotal(settings,'courier','stripe',test))}`} icon={<PackageCheck/>}/>}
             {lockerActive&&<Choice checked={delivery==='locker'} onChange={()=>setDelivery('locker')} name="delivery" value="locker" title="Paczkomat® InPost" meta={`Standardowo ${money(shippingTotal(settings,'locker','stripe',test))}`} icon={<MapPin/>}/>}
           </div>
-          {payment==='cod'&&<p className="checkout-rate-notice">Przy płatności za pobraniem koszt wybranej dostawy wynosi <strong>{money(shipping)}</strong>. Cena obejmuje już pobranie i zastępuje cenę standardową. Nie doliczamy jej drugi raz.</p>}
+          
           {!courierActive&&!lockerActive&&<p className="error">Sprzedawca nie aktywował jeszcze żadnej zweryfikowanej metody dostawy.</p>}
           {delivery==='locker'?<LockerPicker/>:<label>Ulica, numer budynku / lokalu<input name="street" required maxLength={200} autoComplete="street-address"/></label>}
           <div className="form-row"><label>Kod pocztowy<input name="postalCode" required pattern="[0-9]{2}-[0-9]{3}" placeholder="00-000" maxLength={6} autoComplete="postal-code"/></label><label>Miasto<input name="city" required minLength={2} maxLength={100} autoComplete="address-level2"/></label></div>
