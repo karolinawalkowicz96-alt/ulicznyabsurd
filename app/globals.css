@@ -261,3 +261,5 @@ footer{border-radius:40px 40px 0 0}
 .collection-intro{max-width:760px;line-height:1.7;margin:0 0 24px}.payments-notice{background:#f2e5ff;border-left:4px solid #171717;padding:16px 20px;margin:20px 0 32px;line-height:1.6;border-radius:0 12px 12px 0}.payments-notice strong{display:block}
 
 .product-payment-note{display:flex;align-items:center;gap:12px;margin:14px 0 24px;padding:14px 16px;background:#f2e5ff;border:1px solid rgba(23,23,23,.12);border-radius:12px}.product-payment-note>span{font-size:24px}.product-payment-note p{margin:0!important;line-height:1.5}.product-payment-note strong{display:block;font-size:13px}.product-payment-note small{display:block;font-size:12px;opacity:.75}
+
+.checkout-test-note{font-size:13px!important;line-height:1.65;padding:16px 18px;border:1px solid var(--ink);border-radius:14px;background:var(--yellow);margin:20px 0}.checkout-test-note strong{display:block;margin-bottom:4px}.product-payment-note svg{flex-shrink:0}
