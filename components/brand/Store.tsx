@@ -46,7 +46,6 @@ type ShowcaseProduct = {
     image: string;
     alt: string;
     description: string;
-    eyebrow: string;
     photoTag: string;
     stamp: [string, string];
     isStoreProduct?: boolean;
@@ -56,49 +55,49 @@ const showcaseProducts: ShowcaseProduct[] = [
         id: 'oko-01', name: 'Nie widzę się w pracy', title: ['NIE WIDZĘ SIĘ', 'W PRACY.'], image: '/koszulka.webp',
         alt: 'Biała koszulka z nadrukiem Nie widzę się dzisiaj w pracy',
         description: 'Oko na urlopie. Reszta jakoś sobie poradzi. Dla ludzi z bardzo konkretną wizją dnia.',
-        eyebrow: 'PROJEKT 001 / ULICZNY ABSURD', photoTag: 'PROJEKT 001 / BIAŁA', stamp: ['POWAGA?', 'NIE TEN ROZMIAR.'], isStoreProduct: true,
+        photoTag: 'BIAŁA KOSZULKA', stamp: ['POWAGA?', 'NIE TEN ROZMIAR.'], isStoreProduct: true,
     },
     {
         id: 'noc-02', name: 'Nie śpimy, lecimy', title: ['NIE ŚPIMY,', 'LECIMY.'], image: '/products/nie-spimy-lecimy.webp',
         alt: 'Biała koszulka z napisem Nie śpimy, lecimy i postacią kuli dyskotekowej',
         description: 'Sen może poczekać. Dobry plan zaczyna się wtedy, kiedy reszta miasta już ziewa.',
-        eyebrow: 'PROJEKT 002 / NOCNA ZMIANA', photoTag: 'PROJEKT 002 / BIAŁA', stamp: ['TRYB NOCNY', 'WŁĄCZONY'],
+        photoTag: 'BIAŁA KOSZULKA', stamp: ['TRYB NOCNY', 'WŁĄCZONY'],
     },
     {
         id: 'szef-03', name: 'Szef imprezy', title: ['SZEF', 'IMPREZY.'], image: '/products/szef-imprezy-brzoskwinia.webp',
         alt: 'Biała koszulka z napisem Szef imprezy i wesołą postacią z kuflem',
         description: 'Stanowisko samozwańcze, ale odpowiedzialność pełna. Dla tych, którzy zawsze wiedzą, gdzie jest następny punkt programu.',
-        eyebrow: 'PROJEKT 003 / PEŁNA ODPOWIEDZIALNOŚĆ', photoTag: 'PROJEKT 003 / BIAŁA', stamp: ['SZEF JEST', 'TYLKO JEDEN'],
+        photoTag: 'BIAŁA KOSZULKA', stamp: ['SZEF JEST', 'TYLKO JEDEN'],
     },
     {
         id: 'glowka-04', name: 'Główka pracuje', title: ['GŁÓWKA', 'PRACUJE.'], image: '/products/glowka-pracuje.webp',
         alt: 'Biała koszulka z napisem Widzisz młody, główka pracuje i wózkiem pełnym butelek',
         description: 'Doświadczenie, spryt i logistyka z odzysku. Koszulka dla ludzi, którzy zawsze znajdą sposób.',
-        eyebrow: 'PROJEKT 004 / GŁÓWKA PRACUJE', photoTag: 'PROJEKT 004 / BIAŁA', stamp: ['PLAN?', 'JUŻ JEST'],
+        photoTag: 'BIAŁA KOSZULKA', stamp: ['PLAN?', 'JUŻ JEST'],
     },
     {
         id: 'zawodowcy-05', name: 'Zawodowcy trenują codziennie', title: ['ZAWODOWCY', 'TRENUJĄ.'], image: '/products/zawodowcy-trenuja-fiolet.webp',
         alt: 'Biała koszulka retro z napisem Zawodowcy trenują codziennie',
         description: 'Forma sama się nie zrobi. Regularność, dyscyplina i bardzo własna definicja treningu.',
-        eyebrow: 'PROJEKT 005 / TRENING CODZIENNY', photoTag: 'PROJEKT 005 / BIAŁA', stamp: ['FORMA?', 'JEST ROBIONA'],
+        photoTag: 'BIAŁA KOSZULKA', stamp: ['FORMA?', 'JEST ROBIONA'],
     },
     {
         id: 'dom-06', name: 'Mogłem zostać w domu', title: ['MOGŁEM ZOSTAĆ', 'W DOMU.'], image: '/products/moglem-zostac-w-domu.webp',
         alt: 'Biała koszulka z mokrym kotem i napisem Mogłem zostać w domu',
         description: 'Prognoza była optymistyczna. Rzeczywistość jak zwykle miała własny plan. Dla zawodowych maruderów.',
-        eyebrow: 'PROJEKT 006 / POGODA Z CHARAKTEREM', photoTag: 'PROJEKT 006 / BIAŁA', stamp: ['WYJŚCIE?', 'BŁĄD 404'],
+        photoTag: 'BIAŁA KOSZULKA', stamp: ['WYJŚCIE?', 'BŁĄD 404'],
     },
     {
         id: 'paliwko-07', name: 'Piwko to moje paliwko', title: ['PIWKO TO MOJE', 'PALIWKO.'], image: '/products/piwko-paliwko.webp',
         alt: 'Biała koszulka z zabawną pompą piwną i napisem Piwko to moje paliwko',
         description: 'Motoryzacja spotyka złoty napój i nagle wszystko nabiera mocy. Projekt z przymrużeniem oka.',
-        eyebrow: 'PROJEKT 007 / PEŁNY BAK HUMORU', photoTag: 'PROJEKT 007 / BIAŁA', stamp: ['BAK?', 'PEŁNY'],
+        photoTag: 'BIAŁA KOSZULKA', stamp: ['BAK?', 'PEŁNY'],
     },
     {
         id: 'ceny-08', name: 'Ceny lecą w górę', title: ['CENY LECĄ', 'W GÓRĘ.'], image: '/products/ceny-leca-w-gore.webp',
         alt: 'Biała koszulka z kasjerem i napisem Ceny tak lecą w górę, że od małego muszę zapierdalać',
         description: 'Od małego na froncie inflacji. Kasjer wie swoje, paragon wie jeszcze więcej.',
-        eyebrow: 'PROJEKT 008 / INFLACJA OD MAŁEGO', photoTag: 'PROJEKT 008 / BIAŁA', stamp: ['TANIEJ?', 'NIE DZIŚ'],
+        photoTag: 'BIAŁA KOSZULKA', stamp: ['TANIEJ?', 'NIE DZIŚ'],
     },
 ];
 function Dialog({ title, onClose, children, wide = false }: {
@@ -123,7 +122,7 @@ export default function Store({ initialProduct = false, initialCatalog, contactE
     useEffect(()=>{if(initialCatalog)setCatalog(initialCatalog)},[initialCatalog,setCatalog]);
     const [productOpen,setProductOpen]=useState(initialProduct), [showcaseIndex,setShowcaseIndex]=useState(0), [menu,setMenu]=useState(false), [zoom,setZoom]=useState(false);
     const liveProducts = catalog.products.filter(p=>!p.hidden);
-    const displayProducts = (initialCatalog || shop.catalog.products.length) ? liveProducts.map((p,i)=>({...showcaseProducts.find(x=>x.id===p.id),...p,title:showcaseProducts.find(x=>x.id===p.id)?.title||[p.name,''],stamp:showcaseProducts.find(x=>x.id===p.id)?.stamp||['NOWY','ABSURD'],alt:`Biała koszulka z nadrukiem ${p.name}`,eyebrow:`PROJEKT ${String(i+1).padStart(3,'0')} / ULICZNY ABSURD`,photoTag:'BIAŁA KOSZULKA'})) : showcaseProducts;
+    const displayProducts = (initialCatalog || shop.catalog.products.length) ? liveProducts.map((p,i)=>({...showcaseProducts.find(x=>x.id===p.id),...p,title:showcaseProducts.find(x=>x.id===p.id)?.title||[p.name,''],stamp:showcaseProducts.find(x=>x.id===p.id)?.stamp||['NOWY','ABSURD'],alt:`Biała koszulka z nadrukiem ${p.name}`,photoTag:'BIAŁA KOSZULKA'})) : showcaseProducts;
     const [stats, setStats] = useState<SocialSnapshot[] | null>(null), [statsError, setStatsError] = useState(false), [selected, setSelected] = useState(0);
     const [formState, setFormState] = useState<'idle' | 'sending' | 'success' | 'error'>('idle'), [formMessage, setFormMessage] = useState('');
     useEffect(() => { loadStats(); const timer = window.setInterval(() => loadStats(), 5 * 60 * 1000); return () => window.clearInterval(timer); }, []);
@@ -161,7 +160,7 @@ export default function Store({ initialProduct = false, initialCatalog, contactE
  <header className="header"><Link href="/" className="brand" aria-label="Uliczny Absurd — strona główna"><Mark /><span>ULICZNY<br />ABSURD</span></Link><nav aria-label="Główna nawigacja"><a href="#kolekcja">KOSZULKI</a><a href="#spolecznosc">NASZ INTERNET</a><a href="#kontakt">WSPÓŁPRACA <ArrowUpRight size={16}/></a></nav><div className="header-actions"><CartButton/><button className="icon-button mobile-menu" aria-label="Otwórz menu" onClick={() => setMenu(true)}><Menu /></button></div></header>
  <main id="main"><CampaignHero />
  <div className="ticker" aria-hidden="true"><div>{Array.from({ length: 4 }, (_, i) => <span key={i}>NIE WSZYSTKO MUSI MIEĆ SENS <b className="ticker-emoji">🔥</b> ALE MOŻE MIEĆ DOBRY NADRUK <b className="ticker-emoji">🔥</b> </span>)}</div></div>
- <section className="collection section" id="kolekcja"><div className="section-heading"><div><span className="eyebrow">01 / DO NOSZENIA</span><h2>ŻARTY NA BOK.<br /><span>KOSZULKI NA SIEBIE.</span></h2></div><p>Śmieszne koszulki. Poważnie dobry prezent.<br />Autorskie nadruki dla tych, którzy mają dystans — do siebie i do świata.</p></div><div className="product-list">{displayProducts.map((item, i) => <div className={`product-feature ${i % 2 ? 'reverse' : ''}`} key={item.id}><button className="product-photo" onClick={() => openProduct(i)} aria-label={`Zobacz koszulkę ${item.name}`}><img src={item.image} srcSet={item.image==='/koszulka.webp'?'/koszulka-400.webp 400w, /koszulka-800.webp 800w, /koszulka.webp 1215w':undefined} sizes="(max-width: 760px) 100vw, 50vw" alt={item.alt} width="1215" height="1295" loading={i < 2 ? 'eager' : 'lazy'}/><span className="photo-tag">{item.photoTag}</span><span className="photo-plus"><Plus /></span></button><div className="product-copy"><span className="small-stamp">{item.stamp[0]}<br />{item.stamp[1]}</span><span className="eyebrow">{item.eyebrow}</span><h3>{item.title[0]}<br />{item.title[1]}</h3><p>{item.description}</p><div className="product-price"><strong>{(() => {const p=catalog.products.find(p=>p.id===item.id);return p&&priceOf(p)!=null?money(priceOf(p)!):'Cena w przygotowaniu'})()}</strong><span>Cena produktu</span></div><div className="size-preview"><span>S</span> <span>M</span> <span>L</span> <span>XL</span> <span>XXL</span></div><button className="button dark full" onClick={() => openProduct(i)}>Wybierz rozmiar <ArrowUpRight /></button><Link className="product-permalink" href={`/produkt/${catalog.products.find(p=>p.id===item.id)?.slug || ['nie-widze-sie-w-pracy','nie-spimy-lecimy','szef-imprezy','glowka-pracuje','zawodowcy-trenuja-codziennie','moglem-zostac-w-domu','piwko-to-moje-paliwko','ceny-leca-w-gore'][i]}`}>Szczegóły koszulki ↗</Link><span className="product-footnote">Wybierz rozmiar i dodaj swój absurd do koszyka.</span></div></div>)}</div></section>
+ <section className="collection section" id="kolekcja"><div className="section-heading"><div><span className="eyebrow">01 / DO NOSZENIA</span><h2>ŻARTY NA BOK.<br /><span>KOSZULKI NA SIEBIE.</span></h2></div><p>Żart, który można założyć na siebie.<br />Śmieszne koszulki z autorskimi nadrukami. Idealne na prezent dla tych, którzy nie traktują życia zbyt serio.</p></div><div className="product-list">{displayProducts.map((item, i) => <div className={`product-feature ${i % 2 ? 'reverse' : ''}`} key={item.id}><button className="product-photo" onClick={() => openProduct(i)} aria-label={`Zobacz koszulkę ${item.name}`}><img src={item.image} srcSet={item.image==='/koszulka.webp'?'/koszulka-400.webp 400w, /koszulka-800.webp 800w, /koszulka.webp 1215w':undefined} sizes="(max-width: 760px) 100vw, 50vw" alt={item.alt} width="1215" height="1295" loading={i < 2 ? 'eager' : 'lazy'}/><span className="photo-tag">{item.photoTag}</span><span className="photo-plus"><Plus /></span></button><div className="product-copy"><span className="small-stamp">{item.stamp[0]}<br />{item.stamp[1]}</span><h3>{item.title[0]}<br />{item.title[1]}</h3><p>{item.description}</p><div className="product-price"><strong>{(() => {const p=catalog.products.find(p=>p.id===item.id);return p&&priceOf(p)!=null?money(priceOf(p)!):'Cena w przygotowaniu'})()}</strong><span>Cena produktu</span></div><div className="size-preview"><span>S</span> <span>M</span> <span>L</span> <span>XL</span> <span>XXL</span></div><button className="button dark full" onClick={() => openProduct(i)}>Wybierz rozmiar <ArrowUpRight /></button><Link className="product-permalink" href={`/produkt/${catalog.products.find(p=>p.id===item.id)?.slug || ['nie-widze-sie-w-pracy','nie-spimy-lecimy','szef-imprezy','glowka-pracuje','zawodowcy-trenuja-codziennie','moglem-zostac-w-domu','piwko-to-moje-paliwko','ceny-leca-w-gore'][i]}`}>Szczegóły koszulki ↗</Link><span className="product-footnote">Wybierz rozmiar i dodaj swój absurd do koszyka.</span></div></div>)}</div></section>
  <section className="lookbook section"><div className="section-heading"><div><span className="eyebrow">TAK SIĘ NOSI ABSURD</span><h2>Z INTERNETU.<br/>PROSTO W ŻYCIE.</h2></div><p>Na urlop. Na miasto. Na grilla.<br/>Powagę zostaw w domu.</p></div><div className="lookbook-grid">{[{image:'oko',index:0,label:'Dzisiaj? Poza biurem.'},{image:'paliwko',index:6,label:'Pełny bak. Dobry skład.'}].map(x=><button key={x.image} onClick={()=>openProduct(Math.max(0,displayProducts.findIndex(p=>p.id===showcaseProducts[x.index].id)))}><img src={`/lookbook/${x.image}.webp`} alt={showcaseProducts[x.index].name + ' — stylizacja'} loading="lazy" width="800" height="1200"/><span>{x.label}<ArrowUpRight size={20}/></span></button>)}</div></section>
  <Eyes/>
  <section className="community section" id="spolecznosc"><div className="section-heading"><div><span className="eyebrow">02 / PO DRUGIEJ STRONIE EKRANU</span><h2>NASZ KAWAŁEK<br />INTERNETU.</h2></div><p>Cztery platformy.<br />Jedno niepoważne uniwersum.</p></div><div className="social-layout"><div className="social-tabs" role="tablist" aria-label="Platforma społecznościowa">{platforms.map((p, i) => <button key={p} role="tab" id={`tab-${i}`} aria-selected={selected === i} aria-controls="social-panel" tabIndex={selected === i ? 0 : -1} onKeyDown={e => { if (['ArrowDown', 'ArrowRight', 'ArrowUp', 'ArrowLeft'].includes(e.key)) {
@@ -174,7 +173,7 @@ export default function Store({ initialProduct = false, initialCatalog, contactE
  <section className="faq section" id="faq"><div><span className="eyebrow">04 / ZANIM ZAPYTASZ</span><h2>BEZ GŁUPICH<br />PYTAŃ.</h2><p>Odpowiedzi całkiem na serio.</p></div><div className="faq-list">{faq.map(([q, a], i) => <details key={q}><summary><span><small>0{i + 1}</small>{q}</span><Plus size={21}/></summary><p>{a}</p></details>)}</div></section>
  </main><footer><div className="footer-top"><div className="footer-brand-block"><Link href="/" className="brand"><Mark /><span>ULICZNY<br />ABSURD</span></Link><p>Życie jest za krótkie<br />na nudne koszulki.</p></div><div className="footer-nav-groups"><div className="footer-nav-group"><span className="footer-nav-label">Sklep</span><nav aria-label="Sklep"><a href="#kolekcja">Koszulki</a><a href="#spolecznosc">Nasz internet</a><a href="#faq">FAQ</a></nav></div><div className="footer-nav-group"><span className="footer-nav-label">Pomoc</span><nav aria-label="Pomoc"><a href="#kontakt">Kontakt</a><Link href="/dostawa">Dostawa i płatności</Link><Link href="/zwroty">Zwroty</Link><Link href="/reklamacje">Reklamacje</Link><Link href="/odstapienie">Formularz odstąpienia</Link></nav></div><div className="footer-nav-group"><span className="footer-nav-label">Informacje</span><nav aria-label="Informacje prawne"><Link href="/regulamin">Regulamin</Link><Link href="/prywatnosc">Prywatność</Link><Link href="/cookies">Cookies</Link><Link href="/sprzedawca">Dane sprzedawcy</Link></nav></div></div></div><div className="footer-wordmark" aria-hidden="true">ULICZNY ABSURD</div><div className="footer-bottom"><span>© {new Date().getFullYear()} ULICZNY ABSURD</span><span>ZERO POWAGI. DUŻO CHARAKTERU.</span><a href="#main">DO GÓRY ↑</a></div></footer>
  {menu && <Dialog title="MENU" onClose={() => setMenu(false)}><nav className="menu-links">{[['#kolekcja', 'Koszulki'], ['#spolecznosc', 'Nasz internet'], ['#kontakt', 'Współpraca'], ['#faq', 'FAQ']].map(([h, t]) => <a href={h} key={h} onClick={() => setMenu(false)}>{t}<ArrowUpRight /></a>)}</nav></Dialog>}
- {productOpen && <Dialog title={`PROJEKT ${String(showcaseIndex + 1).padStart(3, '0')} / SZCZEGÓŁY KOSZULKI`} onClose={() => setProductOpen(false)} wide><div className="product-panel"><div><button className={`gallery ${zoom ? 'zoom' : ''}`} onClick={() => setZoom(!zoom)} aria-label={zoom ? 'Oddal zdjęcie' : 'Powiększ nadruk'}><img src={activeShowcase.image} alt={activeShowcase.alt}/><span>{zoom ? '− Oddal' : '+ Powiększ nadruk'}</span></button><small className="gallery-caption">{String(showcaseIndex + 1).padStart(2, '0')} / Przód • podgląd projektu</small></div><div className="product-details"><span className="eyebrow">BIAŁA KOSZULKA / ULICZNY ABSURD</span><h2>{activeShowcase.name}</h2><p>{activeShowcase.description}</p>{activeProduct ? <><BuyPanel key={activeProduct.id} product={activeProduct}/><Link className="product-permalink" href={`/produkt/${activeProduct.slug}`}>Szczegóły produktu ↗</Link></> : <p>Wczytywanie dostępności produktu…</p>}</div></div></Dialog>}
+ {productOpen && <Dialog title={`KOSZULKA: ${activeShowcase.name}`} onClose={() => setProductOpen(false)} wide><div className="product-panel"><div><button className={`gallery ${zoom ? 'zoom' : ''}`} onClick={() => setZoom(!zoom)} aria-label={zoom ? 'Oddal zdjęcie' : 'Powiększ nadruk'}><img src={activeShowcase.image} alt={activeShowcase.alt}/><span>{zoom ? '− Oddal' : '+ Powiększ nadruk'}</span></button><small className="gallery-caption">Przód • podgląd nadruku</small></div><div className="product-details"><span className="eyebrow">BIAŁA KOSZULKA / ULICZNY ABSURD</span><h2>{activeShowcase.name}</h2><p>{activeShowcase.description}</p>{activeProduct ? <><BuyPanel key={activeProduct.id} product={activeProduct}/><Link className="product-permalink" href={`/produkt/${activeProduct.slug}`}>Szczegóły produktu ↗</Link></> : <p>Wczytywanie dostępności produktu…</p>}</div></div></Dialog>}
  </>;
 }
 function AnimatedNumber({ value }: {
