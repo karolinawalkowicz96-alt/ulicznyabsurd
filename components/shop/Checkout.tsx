@@ -67,9 +67,10 @@ export default function Checkout(){
 
         <section className="checkout-card"><div className="checkout-card-title"><span>02</span><div><h2>Dostawa</h2><p>Wybierz wygodny sposób odbioru.</p></div></div>
           <div className="choice-grid" role="radiogroup" aria-label="Metoda dostawy">
-            {courierActive&&<Choice checked={delivery==='courier'} onChange={()=>setDelivery('courier')} name="delivery" value="courier" title="Kurier InPost" meta={money(shippingTotal(settings,'courier',payment,test))} icon={<PackageCheck/>}/>}
-            {lockerActive&&<Choice checked={delivery==='locker'} onChange={()=>setDelivery('locker')} name="delivery" value="locker" title="Paczkomat® InPost" meta={money(shippingTotal(settings,'locker',payment,test))} icon={<MapPin/>}/>}
+            {courierActive&&<Choice checked={delivery==='courier'} onChange={()=>setDelivery('courier')} name="delivery" value="courier" title="Kurier InPost" meta={`Standardowo ${money(shippingTotal(settings,'courier','stripe',test))}`} icon={<PackageCheck/>}/>}
+            {lockerActive&&<Choice checked={delivery==='locker'} onChange={()=>setDelivery('locker')} name="delivery" value="locker" title="Paczkomat® InPost" meta={`Standardowo ${money(shippingTotal(settings,'locker','stripe',test))}`} icon={<MapPin/>}/>}
           </div>
+          {payment==='cod'&&<p className="checkout-rate-notice">Przy płatności za pobraniem koszt wybranej dostawy wynosi <strong>{money(shipping)}</strong>. Cena obejmuje już pobranie i zastępuje cenę standardową. Nie doliczamy jej drugi raz.</p>}
           {!courierActive&&!lockerActive&&<p className="error">Sprzedawca nie aktywował jeszcze żadnej zweryfikowanej metody dostawy.</p>}
           {delivery==='locker'?<LockerPicker/>:<label>Ulica, numer budynku / lokalu<input name="street" required maxLength={200} autoComplete="street-address"/></label>}
           <div className="form-row"><label>Kod pocztowy<input name="postalCode" required pattern="[0-9]{2}-[0-9]{3}" placeholder="00-000" maxLength={6} autoComplete="postal-code"/></label><label>Miasto<input name="city" required minLength={2} maxLength={100} autoComplete="address-level2"/></label></div>
@@ -79,7 +80,7 @@ export default function Checkout(){
 
         <section className="checkout-card"><div className="checkout-card-title"><span>03</span><div><h2>Płatność</h2><p>{test?'Zamówienie próbne — bez pobierania płatności.':'Wybierz sposób płatności.'}</p></div></div>
           <div className="choice-grid" role="radiogroup" aria-label="Metoda płatności">
-            {codActive&&<Choice checked={payment==='cod'} onChange={()=>setPayment('cod')} name="payment" value="cod" title={test?'Za pobraniem — próba':`Za pobraniem (dostawa ${money(shippingTotal(settings,delivery,'cod',test))})`} meta={test?'bez płatności i wysyłki':'Płacisz za produkty i dostawę przy odbiorze'} icon={<PackageCheck/>}/>}
+            {codActive&&<Choice checked={payment==='cod'} onChange={()=>setPayment('cod')} name="payment" value="cod" title={test?'Za pobraniem — próba':'Za pobraniem'} meta={test?'Bez płatności i wysyłki':`Dostawa ${money(shippingTotal(settings,delivery,'cod',test))}. Płacisz przy odbiorze.`} icon={<PackageCheck/>}/>}
             {stripeActive&&<Choice checked={payment==='stripe'} onChange={()=>setPayment('stripe')} name="payment" value="stripe" title="Płatność online" meta="Stripe · dostępne metody konta" icon={<CreditCard/>}/>}
           </div>
           {!codActive&&!stripeActive&&<p className="error">Brak aktywnej metody płatności.</p>}

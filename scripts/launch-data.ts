@@ -58,6 +58,14 @@ if (process.env.VERCEL_ENV === 'production' && process.env.DATABASE_URL) {
     await c.query('INSERT INTO shop_data_migrations(id) VALUES($1)',[id]);
     console.log('InPost COD rates and owner-confirmed product manufacturer details saved.');
   });
+  await transaction(async c => {
+    const id='standard-inpost-rates-2026-10-21';
+    await c.query('SELECT pg_advisory_xact_lock(hashtext($1))',[id]);
+    if((await c.query('SELECT id FROM shop_data_migrations WHERE id=$1',[id])).rows.length)return;
+    await c.query('UPDATE shop_settings SET data=data || $1::jsonb WHERE id=1',[JSON.stringify({courierPrice:1899,lockerPrice:1499,codShippingPrice:2999,codSurcharge:0})]);
+    await c.query('INSERT INTO shop_data_migrations(id) VALUES($1)',[id]);
+    console.log('Standard InPost prices and independent COD price configured.');
+  });
   const activationId='activate-authorized-inpost-sales-2026-10-21';
   if(!(await db().query('SELECT id FROM shop_data_migrations WHERE id=$1',[activationId])).rows.length){
     // User confirmed InPost, 29.99 PLN total COD shipping, and own-brand printed products.
