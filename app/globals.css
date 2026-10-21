@@ -295,3 +295,17 @@ footer{border-radius:40px 40px 0 0}
   .product-origin .origin-overview{grid-template-columns:1fr}
   .product-origin .origin-contact>div{grid-template-columns:1fr;gap:3px}
 }
+
+/* International destinations, shared between product card and checkout. */
+.delivery-country-picker{display:flex;flex-direction:column;gap:7px;font-size:12px;font-weight:600;line-height:1.5}
+.delivery-country-picker select{display:block;width:100%;min-height:48px;padding:11px 40px 11px 14px;border:1px solid #18181640;border-radius:12px;background:#fff;color:var(--ink);font-size:14px;font-weight:500;cursor:pointer}
+.delivery-country-picker select:focus-visible{outline:3px solid #ffd24a;outline-offset:2px}
+.product-destination{margin:18px 0 3px;padding:16px;border:1px solid #18181620;border-radius:14px;background:#fffaf0}
+.product-destination>p{font-size:12px;line-height:1.5;margin-top:8px}
+.product-destination strong{font-weight:700}
+.checkout-card .delivery-country-picker{margin:10px 0 4px}
+.international-delivery{display:flex;align-items:center;gap:13px;padding:19px;border:1px solid var(--ink);border-radius:15px;background:#fff8d8;margin:0 0 22px;font-size:13px}
+.international-delivery>span{display:grid;gap:5px;flex:1;min-width:0}
+.international-delivery small{color:#5a554a;font-size:11px}
+.international-delivery b{white-space:nowrap;font-size:16px}
+@media(max-width:600px){.international-delivery{padding:14px;gap:10px}.international-delivery b{font-size:14px}}

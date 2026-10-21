@@ -66,3 +66,14 @@ test('live InPost COD uses 29.99 total shipping for courier and locker and queue
   }
  }finally{await db().query('UPDATE shop_settings SET data=$1',[JSON.stringify(defaultSettings)]);}
 });
+
+test('international destination needs confirmed courier and online payment before an order can be saved',async()=>{
+ const foreign={...input(),delivery:'international',customer:{...input().customer,country:'DE',postalCode:'10115'}};
+ await assert.rejects(createOrder(foreign),/potwierdzone/);
+ const current=(await db().query('SELECT data FROM shop_settings WHERE id=1')).rows[0].data;
+ try{
+  await db().query('UPDATE shop_settings SET data=$1',[JSON.stringify({...current,internationalShippingReady:true})]);
+  await assert.rejects(createOrder(foreign),/płatności online/);
+  await assert.rejects(createOrder({...foreign,payment:'stripe'}),/próbne zamówienie|Stripe/);
+ }finally{await db().query('UPDATE shop_settings SET data=$1',[JSON.stringify(current)]);}
+});

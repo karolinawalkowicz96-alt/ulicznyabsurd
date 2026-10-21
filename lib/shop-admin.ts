@@ -20,6 +20,7 @@ export async function saveProduct(raw:unknown){const p=productSchema.parse(raw);
 const settingsSchema=z.object({
   testMode:z.boolean(),salesActive:z.boolean(),codActive:z.boolean(),stripeActive:z.boolean(),
   courierActive:z.boolean().default(false),lockerActive:z.boolean().default(false),courierPrice:z.number().int().min(0).max(1000000).default(0),lockerPrice:z.number().int().min(0).max(1000000).default(0),
+  internationalShippingReady:z.boolean().default(false),
   courierCodConfirmed:z.boolean(),lockerCodConfirmed:z.boolean(),internationalCodConfirmed:z.boolean(),codSurcharge:z.number().int().min(0).max(100000),codShippingPrice:z.number().int().min(0).max(1000000).optional(),
   quarterlyLimit:z.number().int().positive(),instagram:z.number().int().min(0),facebook:z.number().int().min(0),youtube:z.number().int().min(0),tiktok:z.number().int().min(0),views:z.number().int().min(0),statsUpdated:z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   sellerPhone:z.string().trim().max(30).optional().default(''),fulfillmentDays:z.number().int().min(0).max(365).optional().default(0),legalReady:z.boolean().optional().default(false),sizeChartApproved:z.boolean().optional().default(false),shippingReady:z.boolean().optional().default(false)

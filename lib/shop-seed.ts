@@ -10,7 +10,7 @@ export const seedProducts:ShopProduct[]=entries.map(([id,slug,name,image,descrip
 export const defaultSettings:ShopSettings={
   sellerPhone:'+48 513 258 296',fulfillmentDays:7,legalReady:false,sizeChartApproved:true,shippingReady:false,
   testMode:false,salesActive:false,codActive:false,stripeActive:false,
-  courierActive:true,lockerActive:true,courierPrice:1899,lockerPrice:1499,
+  courierActive:true,lockerActive:true,courierPrice:1899,lockerPrice:1499,internationalShippingReady:false,
   courierCodConfirmed:false,lockerCodConfirmed:false,internationalCodConfirmed:false,codSurcharge:0,
   quarterlyLimit:1081350,instagram:4000,facebook:32100,youtube:800,tiktok:27000,views:30000000,statsUpdated:'2026-10-20'
 };

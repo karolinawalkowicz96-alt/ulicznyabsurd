@@ -2,7 +2,8 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { Check, CreditCard, MapPin, PackageCheck, ShoppingBag } from 'lucide-react';
-import { useShop, ShopHeader, priceOf, type Catalog } from './Shop';
+import { useShop, ShopHeader, CountryPicker, priceOf, type Catalog } from './Shop';
+import { deliveryCountryName } from '@/lib/delivery-countries';
 import LockerPicker from './LockerPicker';
 import { shippingTotal } from '@/lib/shop-shipping';
 import { money } from '@/lib/catalog';
@@ -11,7 +12,7 @@ import type { ShopOrder } from '@/lib/shop-types';
 const statusLabel:Record<string,string>={new:'przyjęte',confirmed:'potwierdzone',processing:'w realizacji',packed:'spakowane',shipped:'wysłane',delivered:'doręczone',completed:'zakończone',cancelled:'anulowane',returned:'zwrócone',pending:'oczekuje',paid:'opłacone',unpaid:'nieopłacone',failed:'nieudane'};
 
 export default function Checkout(){
-  const {items,setItems,catalog,setCatalog,ready,catalogReady}=useShop();
+  const {items,setItems,catalog,setCatalog,ready,catalogReady,destinationCountry,setDestinationCountry}=useShop();
   const settings=catalog.settings;
   const test=Boolean(settings.testMode);
   const courierActive=Boolean(settings.courierActive);
@@ -19,6 +20,8 @@ export default function Checkout(){
   const codActive=Boolean(settings.codActive);
   const stripeActive=Boolean(settings.stripeActive);
   const [delivery,setDelivery]=useState<'courier'|'locker'>('courier');
+  const abroad=destinationCountry!=='PL';
+  const selectedDelivery=abroad?'international':delivery;
   const [payment,setPayment]=useState<'cod'|'stripe'>('cod');
   const [error,setError]=useState('');const [busy,setBusy]=useState(false);const [order,setOrder]=useState<ShopOrder|null>(null);const [loadingOrder,setLoadingOrder]=useState(false);
 
@@ -28,17 +31,17 @@ export default function Checkout(){
   useEffect(()=>{const token=new URLSearchParams(location.search).get('token');if(token){setLoadingOrder(true);fetch(`/api/shop/orders?token=${encodeURIComponent(token)}`,{cache:'no-store'}).then(async r=>{const d=await r.json() as {order:ShopOrder;error?:string};if(!r.ok)throw Error(d.error||'Nie można odczytać zamówienia.');setOrder(d.order);if(d.order.payment==='stripe'&&d.order.paymentStatus==='paid')setItems([]);}).catch(e=>setError(e.message)).finally(()=>setLoadingOrder(false));}},[setItems]);
 
   const subtotal=useMemo(()=>items.reduce((s,i)=>s+i.quantity*(priceOf(catalog.products.find(p=>p.id===i.id)||{price:0} as never)||0),0),[items,catalog.products]);
-  const shipping=shippingTotal(settings,delivery,payment,test);
+  const shipping=shippingTotal(settings,selectedDelivery,payment,test);
   const codConfirmed=test||Boolean(delivery==='locker'?settings.lockerCodConfirmed:settings.courierCodConfirmed);
-  const deliveryAvailable=delivery==='locker'?lockerActive:courierActive;
-  const paymentAvailable=payment==='cod'?codActive&&codConfirmed:stripeActive;
+  const deliveryAvailable=abroad?Boolean(settings.internationalShippingReady):(delivery==='locker'?lockerActive:courierActive);
+  const paymentAvailable=abroad?payment==='stripe'&&stripeActive:(payment==='cod'?codActive&&codConfirmed:stripeActive);
   const checkoutAvailable=catalog.configured&&deliveryAvailable&&paymentAvailable&&(test||Boolean(settings.salesActive));
 
   async function submit(e:React.FormEvent<HTMLFormElement>){
     e.preventDefault();if(busy||!checkoutAvailable)return;setError('');setBusy(true);
     try{
       const data=Object.fromEntries(new FormData(e.currentTarget));
-      const payload={items,expectedTotal:subtotal+shipping,customer:{firstName:data.firstName,lastName:data.lastName,email:data.email,phone:data.phone,country:'PL',street:data.street||'',postalCode:data.postalCode,city:data.city,locker:data.locker||'',notes:data.notes||'',invoice:data.invoice||''},delivery,payment,acceptedTerms:data.acceptedTerms==='on',testAcknowledged:test&&data.acceptedTerms==='on'};
+      const payload={items,expectedTotal:subtotal+shipping,customer:{firstName:data.firstName,lastName:data.lastName,email:data.email,phone:data.phone,country:destinationCountry,street:data.street||'',postalCode:data.postalCode,city:data.city,locker:data.locker||'',notes:data.notes||'',invoice:data.invoice||''},delivery:selectedDelivery,payment,acceptedTerms:data.acceptedTerms==='on',testAcknowledged:test&&data.acceptedTerms==='on'};
       const signature=JSON.stringify(payload);let attempt:{signature:string;key:string}|undefined;try{attempt=JSON.parse(sessionStorage.getItem('ua-order-attempt')||'null')}catch{}
       if(!attempt||attempt.signature!==signature)attempt={signature,key:crypto.randomUUID()};sessionStorage.setItem('ua-order-attempt',JSON.stringify(attempt));
       const response=await fetch('/api/shop/orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...payload,idempotencyKey:attempt.key})});
@@ -59,33 +62,33 @@ export default function Checkout(){
     {catalogReady&&!test&&!Boolean(settings.salesActive)&&<p className="form-notice">Zamówienia są chwilowo niedostępne. Skontaktuj się z nami: <a href="mailto:ulicznyabsurd@gmail.com">ulicznyabsurd@gmail.com</a>.</p>}
     {!ready||!catalogReady?<p role="status">Wczytywanie sklepu i koszyka…</p>:!items.length?<div className="checkout-empty"><ShoppingBag size={46}/><h2>Koszyk jest pusty.</h2><Link className="button dark" href="/#kolekcja">Wybierz koszulkę</Link></div>:<div className="shop-checkout-grid">
       <form className="checkout-form" onSubmit={submit}>
-        <section className="checkout-card"><div className="checkout-card-title"><span>01</span><div><h2>Dane do dostawy</h2><p>Dostarczamy na terenie Polski.</p></div></div>
+        <section className="checkout-card"><div className="checkout-card-title"><span>01</span><div><h2>Dane do dostawy</h2><p>Wybierz kraj, aby poznać koszt dostawy.</p></div></div>
           <div className="form-row"><label>Imię<input name="firstName" required minLength={2} maxLength={80} autoComplete="given-name"/></label><label>Nazwisko<input name="lastName" required minLength={2} maxLength={80} autoComplete="family-name"/></label></div>
           <div className="form-row"><label>E-mail<input name="email" type="email" required maxLength={200} autoComplete="email"/></label><label>Telefon<input name="phone" type="tel" required pattern="[+0-9 ()\-]{7,20}" autoComplete="tel"/></label></div>
-          <div className="country-static"><MapPin size={18}/><span><small>Kraj dostawy</small><strong>Polska</strong></span></div>
+          <CountryPicker country={destinationCountry} onChange={setDestinationCountry}/>
         </section>
 
-        <section className="checkout-card"><div className="checkout-card-title"><span>02</span><div><h2>Dostawa</h2><p>Wybierz wygodny sposób odbioru.</p></div></div>
-          <div className="choice-grid" role="radiogroup" aria-label="Metoda dostawy">
+        <section className="checkout-card"><div className="checkout-card-title"><span>02</span><div><h2>Dostawa</h2><p>{abroad?`Wysyłka do: ${deliveryCountryName(destinationCountry)}.`:"Wybierz wygodny sposób odbioru."}</p></div></div>
+          {abroad?<div className="international-delivery"><PackageCheck size={25}/><span><strong>Dostawa za granicę</strong><small>Kurier międzynarodowy</small></span><b>{money(shipping)}</b></div>:<div className="choice-grid" role="radiogroup" aria-label="Metoda dostawy">
             {courierActive&&<Choice checked={delivery==='courier'} onChange={()=>setDelivery('courier')} name="delivery" value="courier" title="Kurier InPost" meta={`Standardowo ${money(shippingTotal(settings,'courier','stripe',test))}`} icon={<PackageCheck/>}/>}
             {lockerActive&&<Choice checked={delivery==='locker'} onChange={()=>setDelivery('locker')} name="delivery" value="locker" title="Paczkomat® InPost" meta={`Standardowo ${money(shippingTotal(settings,'locker','stripe',test))}`} icon={<MapPin/>}/>}
-          </div>
+          </div>}
           
-          {!courierActive&&!lockerActive&&<p className="error">Sprzedawca nie aktywował jeszcze żadnej zweryfikowanej metody dostawy.</p>}
-          {delivery==='locker'?<LockerPicker/>:<label>Ulica, numer budynku / lokalu<input name="street" required maxLength={200} autoComplete="street-address"/></label>}
-          <div className="form-row"><label>Kod pocztowy<input name="postalCode" required pattern="[0-9]{2}-[0-9]{3}" placeholder="00-000" maxLength={6} autoComplete="postal-code"/></label><label>Miasto<input name="city" required minLength={2} maxLength={100} autoComplete="address-level2"/></label></div>
+          {!abroad&&!courierActive&&!lockerActive&&<p className="error">Sprzedawca nie aktywował jeszcze żadnej zweryfikowanej metody dostawy.</p>}
+          {selectedDelivery==='locker'?<LockerPicker/>:<label>Ulica, numer budynku / lokalu<input name="street" required maxLength={200} autoComplete="street-address"/></label>}
+          <div className="form-row"><label>Kod pocztowy<input name="postalCode" required pattern={abroad?undefined:'[0-9]{2}-[0-9]{3}'} placeholder={abroad?'Kod pocztowy':'00-000'} maxLength={abroad?20:6} autoComplete="postal-code"/></label><label>Miasto<input name="city" required minLength={2} maxLength={100} autoComplete="address-level2"/></label></div>
           <label>Uwagi do zamówienia <small>(opcjonalnie)</small><textarea name="notes" maxLength={2000} rows={3}/></label>
           <details className="checkout-details"><summary>Dane do dokumentu sprzedaży (opcjonalnie)</summary><label>Nazwa / dane i adres; identyfikator podatkowy, jeżeli dotyczy<textarea name="invoice" maxLength={1000} rows={3}/></label></details>
         </section>
 
         <section className="checkout-card"><div className="checkout-card-title"><span>03</span><div><h2>Płatność</h2><p>{test?'Zamówienie próbne — bez pobierania płatności.':'Wybierz sposób płatności.'}</p></div></div>
           <div className="choice-grid" role="radiogroup" aria-label="Metoda płatności">
-            {codActive&&<Choice checked={payment==='cod'} onChange={()=>setPayment('cod')} name="payment" value="cod" title={test?'Za pobraniem — próba':'Za pobraniem'} meta={test?'Bez płatności i wysyłki':`Dostawa ${money(shippingTotal(settings,delivery,'cod',test))}. Płacisz przy odbiorze.`} icon={<PackageCheck/>}/>}
+            {codActive&&!abroad&&<Choice checked={payment==='cod'} onChange={()=>setPayment('cod')} name="payment" value="cod" title={test?'Za pobraniem — próba':'Za pobraniem'} meta={test?'Bez płatności i wysyłki':`Dostawa ${money(shippingTotal(settings,delivery,'cod',test))}. Płacisz przy odbiorze.`} icon={<PackageCheck/>}/>}
             {stripeActive&&<Choice checked={payment==='stripe'} onChange={()=>setPayment('stripe')} name="payment" value="stripe" title="Płatność online" meta="Stripe · dostępne metody konta" icon={<CreditCard/>}/>}
           </div>
-          {!codActive&&!stripeActive&&<p className="error">Brak aktywnej metody płatności.</p>}
-          {payment==='cod'&&!codConfirmed&&<p className="error">Pobranie dla tej metody dostawy nie zostało potwierdzone z przewoźnikiem.</p>}
-          {payment==='cod'&&delivery==='locker'&&<p className="checkout-help">Pobranie w automacie Paczkomat® opłacisz bezgotówkowo przed otwarciem skrytki, zgodnie z instrukcją InPost. Nie wkładasz gotówki do automatu.</p>}{payment==='stripe'&&<p className="checkout-help">Stripe pokaże wyłącznie metody dostępne dla tego konta i transakcji — np. kartę lub BLIK, jeśli BLIK jest aktywowany i dostępny.</p>}
+          {!codActive&&!stripeActive&&!abroad&&<p className="error">Brak aktywnej metody płatności.</p>}{abroad&&<p className="checkout-help">Zamówienia zagraniczne są opłacane online. {(!stripeActive||!settings.internationalShippingReady)&&'Możliwość złożenia zamówienia zostanie uruchomiona po potwierdzeniu obsługi dostaw i aktywacji płatności online.'}</p>}
+          {!abroad&&payment==='cod'&&!codConfirmed&&<p className="error">Pobranie dla tej metody dostawy nie zostało potwierdzone z przewoźnikiem.</p>}
+          {!abroad&&payment==='cod'&&delivery==='locker'&&<p className="checkout-help">Pobranie w automacie Paczkomat® opłacisz bezgotówkowo przed otwarciem skrytki, zgodnie z instrukcją InPost. Nie wkładasz gotówki do automatu.</p>}{payment==='stripe'&&stripeActive&&<p className="checkout-help">Stripe pokaże wyłącznie metody dostępne dla tego konta i transakcji — np. kartę lub BLIK, jeśli BLIK jest aktywowany i dostępny.</p>}
         </section>
 
         <section className="checkout-card checkout-legal"><div className="checkout-card-title"><span>04</span><div><h2>Przed zamówieniem</h2><p>Najważniejsze informacje o sprzedawcy i umowie.</p></div></div>
@@ -95,10 +98,10 @@ export default function Checkout(){
         </section>
         {error&&<p className="error" role="alert">{error}</p>}
         <button className="button dark checkout-submit" disabled={busy||!checkoutAvailable} type="submit">{busy?'Zapisywanie…':test?'Złóż zamówienie testowe':'Zamawiam z obowiązkiem zapłaty'}</button>
-        {!checkoutAvailable&&<p className="checkout-help">Przycisk pozostaje nieaktywny, dopóki sklep, dostawa i wybrana płatność nie są rzeczywiście dostępne.</p>}
+        {!checkoutAvailable&&<p className="checkout-help">{abroad?'Zamówienie zagraniczne będzie dostępne po potwierdzeniu przewoźnika i uruchomieniu płatności online.':'Przycisk pozostaje nieaktywny, dopóki sklep, dostawa i wybrana płatność nie są rzeczywiście dostępne.'}</p>}
       </form>
 
-      <aside className="shop-order-summary" aria-label="Podsumowanie zamówienia"><span className="eyebrow">TWOJE ZAMÓWIENIE</span><div className="summary-items">{items.map(i=>{const p=catalog.products.find(p=>p.id===i.id);return <div className="summary-item" key={i.id+i.size}>{p&&<img src={p.image} alt=""/>}<div><h3>{p?.name||'Produkt'}</h3><p>Rozmiar {i.size} · {i.quantity} szt.</p><strong>{p&&priceOf(p)!=null?money(i.quantity*priceOf(p)!):'Cena do potwierdzenia'}</strong></div></div>})}</div><div className="summary-lines"><p><span>Produkty</span><strong>{money(subtotal)}</strong></p><p><span>Dostawa InPost{payment==='cod'?' za pobraniem':''}</span><strong>{money(shipping)}</strong></p><p className="summary-total"><span>Razem</span><strong>{money(subtotal+shipping)}</strong></p></div><div className="summary-note"><Check size={18}/><p>Pełna kwota, bez niespodzianek. Dostawa za pobraniem obejmuje już opłatę za pobranie.</p></div></aside>
+      <aside className="shop-order-summary" aria-label="Podsumowanie zamówienia"><span className="eyebrow">TWOJE ZAMÓWIENIE</span><div className="summary-items">{items.map(i=>{const p=catalog.products.find(p=>p.id===i.id);return <div className="summary-item" key={i.id+i.size}>{p&&<img src={p.image} alt=""/>}<div><h3>{p?.name||'Produkt'}</h3><p>Rozmiar {i.size} · {i.quantity} szt.</p><strong>{p&&priceOf(p)!=null?money(i.quantity*priceOf(p)!):'Cena do potwierdzenia'}</strong></div></div>})}</div><div className="summary-lines"><p><span>Produkty</span><strong>{money(subtotal)}</strong></p><p><span>{abroad?'Dostawa za granicę':`Dostawa InPost${payment==='cod'?' za pobraniem':''}`}</span><strong>{money(shipping)}</strong></p><p className="summary-total"><span>Razem</span><strong>{money(subtotal+shipping)}</strong></p></div><div className="summary-note"><Check size={18}/><p>{abroad?'Kwota dostawy zagranicznej jest uwzględniona w podsumowaniu.':'Pełna kwota, bez niespodzianek. Dostawa za pobraniem obejmuje już opłatę za pobranie.'}</p></div></aside>
     </div>}
   </>}</main></>;
 }

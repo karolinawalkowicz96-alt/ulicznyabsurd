@@ -20,8 +20,11 @@ test('COD total replaces the base delivery price; online keeps the original deli
  const {shippingTotal}=await import('../lib/shop-shipping');
  const settings={courierPrice:1899,lockerPrice:1499,codSurcharge:500,codShippingPrice:2999};
  assert.equal(shippingTotal(settings,'courier','cod'),2999);
+ assert.equal(shippingTotal(settings,'international','stripe'),11900);
+ assert.equal(shippingTotal(settings,'international','cod'),11900);
  assert.equal(shippingTotal(settings,'locker','cod'),2999);
  assert.equal(shippingTotal(settings,'courier','stripe'),1899);
  assert.equal(shippingTotal(settings,'locker','stripe'),1499);
+ assert.equal(orderInput.safeParse({idempotencyKey:'5cce6292-eaef-4d6b-8a9e-5b59bcecfabc',items:[{id:'oko-01',size:'M',quantity:1}],customer:{firstName:'Jan',lastName:'Testowy',email:'jan@example.com',phone:'123456789',country:'DE',street:'Musterstr. 1',postalCode:'10115',city:'Berlin'},delivery:'international',payment:'stripe',acceptedTerms:true}).success,true);
  assert.equal(shippingTotal({...settings,codShippingPrice:undefined},'locker','cod'),1999);
 });
