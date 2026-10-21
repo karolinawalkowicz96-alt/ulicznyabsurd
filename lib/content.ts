@@ -7,7 +7,7 @@ export const profiles: Record<Platform, string> = {
     TikTok: 'https://tiktok.com/@ulicznyabsurd',
 };
 export const faq = [
-    ['Jak dobrać rozmiar?', 'Przy produkcie znajdziesz tabelę wymiarów mierzonych na płasko. Przed uruchomieniem sprzedaży jej zgodność z rzeczywistym modelem musi być potwierdzona przez sprzedawcę.'],
+    ['Jak dobrać rozmiar?', 'Przy produkcie znajdziesz tabelę wymiarów mierzonych na płasko. Porównaj szerokość i długość ze swoją ulubioną koszulką. Wymiary podano w centymetrach, z tolerancją ±5%.'],
     ['Jak zamówić koszulkę?', 'Wybierz dostępny rozmiar i ilość, dodaj produkt do koszyka, a następnie przejdź przez dostawę i płatność. Jeśli widzisz TRYB TESTOWY, zamówienia nie są realizowane.'],
     ['Jakie są metody płatności?', 'Checkout pokazuje wyłącznie metody rzeczywiście aktywne. Płatność online obsługuje Stripe; karta, BLIK lub inna metoda pojawi się tylko wtedy, gdy jest dostępna dla konta i danej transakcji.'],
     ['Kiedy dotrze paczka?', 'Aktualne metody, koszt i maksymalny termin dostarczenia są pokazywane przed złożeniem rzeczywistego zamówienia oraz na stronie Dostawa i płatności.'],

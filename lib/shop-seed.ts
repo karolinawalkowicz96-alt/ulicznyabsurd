@@ -3,12 +3,12 @@ const entries=[['oko-01','nie-widze-sie-w-pracy','Nie widzę się w pracy','/kos
 export const seedProducts:ShopProduct[]=entries.map(([id,slug,name,image,description],i)=>({
   id,slug,name,image,description,images:[image],price:i===0?12900:null,priceApproved:i===0,active:true,hidden:false,soldOut:false,sortOrder:i,bestseller:false,isNew:false,
   seoTitle:`${name} — koszulka z nadrukiem | Uliczny Absurd`,seoDescription:description,
-  material:'Skład i materiał wymagają potwierdzenia na podstawie dokumentacji lub metki produktu.',care:'Pielęgnację należy uzupełnić zgodnie z metką producenta.',
-  manufacturer:'',manufacturerAddress:'',manufacturerEmail:'',manufacturerCountry:'',responsiblePerson:'',responsiblePersonAddress:'',responsiblePersonEmail:'',composition:'',safetyInfo:'',gpsrReady:false,
+  material:'100% bawełna · 185 g/m²',care:'Pranie do 40°C. Prasowanie i suszenie w suszarce bębnowej zgodnie z metką produktu. Nadruk prasuj na lewej stronie, unikając bezpośredniego kontaktu z żelazkiem.',
+  manufacturer:'',manufacturerAddress:'',manufacturerEmail:'',manufacturerCountry:'',responsiblePerson:'',responsiblePersonAddress:'',responsiblePersonEmail:'',composition:'100% bawełna; gramatura 185 g/m² (biała koszulka)',safetyInfo:'',gpsrReady:false,
   variants:shopSizes.map(size=>({size,stock:null}))
 }));
 export const defaultSettings:ShopSettings={
-  sellerPhone:'',fulfillmentDays:0,legalReady:false,sizeChartApproved:false,shippingReady:false,
+  sellerPhone:'+48 513 258 296',fulfillmentDays:0,legalReady:false,sizeChartApproved:true,shippingReady:false,
   testMode:true,salesActive:false,codActive:false,stripeActive:false,
   courierActive:false,lockerActive:false,courierPrice:0,lockerPrice:0,
   courierCodConfirmed:false,lockerCodConfirmed:false,internationalCodConfirmed:false,codSurcharge:0,
