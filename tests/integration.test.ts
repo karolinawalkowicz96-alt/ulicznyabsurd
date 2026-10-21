@@ -41,12 +41,12 @@ test('admin status workflow records history and requires actual tracking before 
 test('cancellation restores stock exactly once and cannot reopen',async()=>{const {updateOrder}=await import('../lib/shop-admin');const a=await createOrder(input());const stock=async()=>(await db().query("SELECT test_stock FROM shop_variants WHERE product_id='oko-01' AND size='M'")).rows[0].test_stock;const n=await stock();await updateOrder(a.id,{status:'cancelled'});assert.equal(await stock(),n+2);await updateOrder(a.id,{status:'cancelled'});assert.equal(await stock(),n+2);await assert.rejects(updateOrder(a.id,{status:'processing'}),/ponownie/);});
 test('mail failure preserves order; durable retry uses same provider idempotency key',async()=>{const {retryNotifications}=await import('../lib/shop-mail');const a=await createOrder(input());await db().query("UPDATE shop_orders SET data=jsonb_set(data,'{testMode}','false') WHERE id=$1",[a.id]);const job=randomUUID();await db().query('INSERT INTO shop_outbox(id,order_id,recipient,event) VALUES($1,$2,$3,$4)',[job,a.id,'test@example.com','new']);process.env.RESEND_API_KEY='test-only-never-sent';process.env.EMAIL_FROM='test@example.com';const originalFetch=globalThis.fetch;let calls=0;let payload:string|undefined;globalThis.fetch=async(_url,options)=>{calls++;if(payload)assert.equal(options?.body,payload);else payload=String(options?.body);assert.equal((options?.headers as Record<string,string>)['Idempotency-Key'],job);return Response.json(calls===1?{error:'temporary'}:{id:'email-qa'}, {status:calls===1?503:200});};try{const failed=await retryNotifications();assert.equal(failed.failed,1);assert.equal(Number((await db().query('SELECT count(*) FROM shop_orders WHERE id=$1',[a.id])).rows[0].count),1);await db().query("UPDATE shop_outbox SET available_at=now()-interval '1 second' WHERE id=$1",[job]);await db().query("UPDATE shop_orders SET data=jsonb_set(data,'{status}','\"processing\"') WHERE id=$1",[a.id]);const retried=await retryNotifications();assert.equal(retried.sent,1);assert.equal((await db().query('SELECT attempts,status FROM shop_outbox WHERE id=$1',[job])).rows[0].attempts,2);}finally{globalThis.fetch=originalFetch;delete process.env.RESEND_API_KEY;delete process.env.EMAIL_FROM;}});
 test('stale checkout total rejects before commit, preserves stock and permits new confirmed total',async()=>{const n=(await db().query("SELECT test_stock FROM shop_variants WHERE product_id='oko-01' AND size='M'")).rows[0].test_stock;await assert.rejects(createOrder({...input(),expectedTotal:1}),/zmianie/);assert.equal((await db().query("SELECT test_stock FROM shop_variants WHERE product_id='oko-01' AND size='M'")).rows[0].test_stock,n);const order=await createOrder({...input(),expectedTotal:40599});assert.equal(order.total,40599);});
-test('Stripe without configuration and international COD are rejected',async()=>{await assert.rejects(createOrder({...input(),payment:'stripe'}),/próbne zamówienie/);await assert.rejects(createOrder({...input(),delivery:'international',customer:{...input().customer,country:'DE',postalCode:'10115'}}),/zagraniczne/);});
+test('Stripe without configuration and international COD are rejected',async()=>{await assert.rejects(createOrder({...input(),payment:'stripe'}),/skonfigurowane/);await assert.rejects(createOrder({...input(),delivery:'international',customer:{...input().customer,country:'DE',postalCode:'10115'}}),/zagraniczne/);});
 test('Stripe confirms only matching paid event, deduplicates and rejects mismatched amount',async()=>{const {applyStripeEvent}=await import('../lib/shop-stripe');const a=await createOrder(input());await db().query("UPDATE shop_orders SET data=data || $2::jsonb WHERE id=$1",[a.id,JSON.stringify({payment:'stripe',stripeSessionId:'cs_test_qa'})]);const event={id:'evt_test_qa',type:'checkout.session.completed',livemode:false,data:{object:{id:'cs_test_qa',currency:'pln',amount_total:a.total,payment_status:'paid',metadata:{order_id:a.id}}}};await assert.rejects(applyStripeEvent({...event,data:{object:{...event.data.object,amount_total:1}}}),/odpowiadają/);assert.equal(await applyStripeEvent({...event,data:{object:{...event.data.object,payment_status:'unpaid'}}}),'ignored');assert.equal(await applyStripeEvent(event),'ok');assert.equal(await applyStripeEvent(event),'duplicate');assert.equal((await db().query('SELECT data FROM shop_orders WHERE id=$1',[a.id])).rows[0].data.paymentStatus,'paid');});
 test('Stripe expiration restores stock once, duplicate cannot restore twice',async()=>{const {applyStripeEvent}=await import('../lib/shop-stripe');const a=await createOrder(input());await db().query("UPDATE shop_orders SET data=data || $2::jsonb WHERE id=$1",[a.id,JSON.stringify({payment:'stripe',stripeSessionId:'cs_test_expired'})]);const stock=async()=>(await db().query("SELECT test_stock FROM shop_variants WHERE product_id='oko-01' AND size='M'")).rows[0].test_stock;const n=await stock();const event={id:'evt_expired_qa',type:'checkout.session.expired',livemode:false,data:{object:{id:'cs_test_expired',currency:'pln',amount_total:a.total,payment_status:'unpaid',metadata:{order_id:a.id}}}};assert.equal(await applyStripeEvent(event),'ok');assert.equal(await stock(),n+2);assert.equal(await applyStripeEvent(event),'duplicate');assert.equal(await stock(),n+2);});
 test('regressing shipped status cannot enable cancellation or double-restock',async()=>{const {updateOrder}=await import('../lib/shop-admin');const a=await createOrder(input());await updateOrder(a.id,{status:'shipped',carrier:'QA courier',trackingNumber:'QA123'});await updateOrder(a.id,{status:'processing',shippingStatus:'pending'});await assert.rejects(updateOrder(a.id,{status:'cancelled'}),/zwrot/);});
 
-test('test orders require explicit acknowledgement and cannot use Stripe',async()=>{await assert.rejects(createOrder({...input(),testAcknowledged:false}),/Potwierdź/);await assert.rejects(createOrder({...input(),payment:'stripe'}),/Potwierdź/);});
+test('test orders require explicit acknowledgement and configured Stripe',async()=>{await assert.rejects(createOrder({...input(),testAcknowledged:false}),/Potwierdź/);await assert.rejects(createOrder({...input(),payment:'stripe'}),/skonfigurowane/);});
 
 
 test('live InPost COD uses 29.99 total shipping for courier and locker and queues notifications',async()=>{
@@ -74,6 +74,49 @@ test('international destination needs confirmed courier and online payment befor
  try{
   await db().query('UPDATE shop_settings SET data=$1',[JSON.stringify({...current,internationalShippingReady:true})]);
   await assert.rejects(createOrder(foreign),/płatności online/);
-  await assert.rejects(createOrder({...foreign,payment:'stripe'}),/próbne zamówienie|Stripe/);
+  await assert.rejects(createOrder({...foreign,payment:'stripe'}),/skonfigurowane|Stripe/);
  }finally{await db().query('UPDATE shop_settings SET data=$1',[JSON.stringify(current)]);}
+});
+
+test('test Stripe Checkout on live storefront isolates stock, mail and rejects live keys',async()=>{
+ const {startStripePayment,applyStripeEvent}=await import('../lib/shop-stripe');
+ const oldSettings=(await db().query('SELECT data FROM shop_settings WHERE id=1')).rows[0].data;
+ const oldFetch=globalThis.fetch;
+ const keys=['STRIPE_SECRET_KEY','STRIPE_WEBHOOK_SECRET','STRIPE_CHECKOUT_MODE','STRIPE_CHECKOUT_ENABLED','APP_URL'] as const;
+ const previous=Object.fromEntries(keys.map(k=>[k,process.env[k]]));
+ const ready={...oldSettings,testMode:false,salesActive:true,legalReady:true,shippingReady:true,sizeChartApproved:true,courierActive:true,courierPrice:1899,stripeActive:false};
+ try{
+  await db().query('UPDATE shop_settings SET data=$1',[JSON.stringify(ready)]);
+  Object.assign(process.env,{STRIPE_SECRET_KEY:'rk_test_local_mock',STRIPE_WEBHOOK_SECRET:'whsec_local_mock',STRIPE_CHECKOUT_MODE:'test',STRIPE_CHECKOUT_ENABLED:'true',APP_URL:'https://www.ulicznyabsurd.pl'});
+  const stock=async()=>(await db().query("SELECT stock,test_stock FROM shop_variants WHERE product_id='oko-01' AND size='M'")).rows[0];
+  const before=await stock();
+  await assert.rejects(createOrder({...input(),payment:'stripe',testAcknowledged:false}),/Potwierdź/);
+  const order=await createOrder({...input(),payment:'stripe'});
+  assert.equal(order.testMode,true);assert.match(order.number,/^TEST-/);
+  assert.equal((await stock()).stock,before.stock);assert.equal((await stock()).test_stock,before.test_stock-2);
+  assert.equal(Number((await db().query('SELECT count(*) FROM shop_outbox WHERE order_id=$1',[order.id])).rows[0].count),0);
+  let calls=0;
+  globalThis.fetch=async(url,options)=>{
+   calls++;assert.equal(url,'https://api.stripe.com/v1/checkout/sessions');
+   const body=new URLSearchParams(String(options?.body));
+   assert.equal(body.get('mode'),'payment');assert.equal(body.get('metadata[order_id]'),order.id);
+   assert.equal(body.get('shipping_options[0][shipping_rate_data][fixed_amount][amount]'),String(order.shipping));
+   assert.equal(body.get('line_items[0][price_data][unit_amount]'),String(order.items[0].price));
+   assert.equal(body.has('payment_method_types'),false);assert.match(body.get('success_url')!,/payment=return/);
+   return Response.json({id:'cs_test_checkout',url:'https://checkout.stripe.com/c/pay/cs_test_checkout'});
+  };
+  await assert.rejects(startStripePayment(order.id,'wrong'),/Nie znaleziono/);
+  assert.match((await startStripePayment(order.id,order.token!)).url!,/^https:\/\/checkout.stripe.com/);
+  await startStripePayment(order.id,order.token!);assert.equal(calls,1);
+  const event={id:'evt_test_checkout',type:'checkout.session.async_payment_succeeded',livemode:false,data:{object:{id:'cs_test_checkout',currency:'pln',amount_total:order.total,payment_status:'paid',metadata:{order_id:order.id}}}};
+  await assert.rejects(applyStripeEvent({...event,livemode:true}),/odpowiadają/);
+  assert.equal(await applyStripeEvent(event),'ok');assert.equal(await applyStripeEvent(event),'duplicate');
+  assert.equal(Number((await db().query('SELECT count(*) FROM shop_outbox WHERE order_id=$1',[order.id])).rows[0].count),0);
+  process.env.STRIPE_SECRET_KEY='sk_live_local_mock';
+  await assert.rejects(createOrder({...input(),payment:'stripe'}),/skonfigurowane/);
+ }finally{
+  globalThis.fetch=oldFetch;
+  for(const key of keys){if(previous[key]===undefined)delete process.env[key];else process.env[key]=previous[key];}
+  await db().query('UPDATE shop_settings SET data=$1',[JSON.stringify(oldSettings)]);
+ }
 });

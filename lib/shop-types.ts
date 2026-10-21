@@ -12,7 +12,7 @@ export type ShopProduct = {
 };
 export type ShopSettings = {
   sellerPhone?:string;fulfillmentDays?:number;legalReady?:boolean;sizeChartApproved?:boolean;shippingReady?:boolean;
-  testMode:boolean;salesActive:boolean;codActive:boolean;stripeActive:boolean;
+  testMode:boolean;salesActive:boolean;codActive:boolean;stripeActive:boolean;stripeTestMode?:boolean;
   courierActive:boolean;lockerActive:boolean;courierPrice:number;lockerPrice:number;internationalShippingReady?:boolean;
   courierCodConfirmed:boolean;lockerCodConfirmed:boolean;internationalCodConfirmed:boolean;codSurcharge:number;codShippingPrice?:number;
   quarterlyLimit:number;instagram:number;facebook:number;youtube:number;tiktok:number;views:number;statsUpdated:string;

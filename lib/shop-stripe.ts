@@ -1,28 +1,31 @@
+import { paymentSettings, stripeKeyMode } from './stripe-config';
+import { defaultSettings } from './shop-seed';
 import { randomUUID } from 'node:crypto';
 import { transaction } from './shop-db';
 import { hash } from './shop-auth';
 import type { ShopOrder } from './shop-types';
 
 async function stripeRequest(path:string, body:URLSearchParams, key:string) {
-  const response=await fetch(`https://api.stripe.com/v1/${path}`,{method:'POST',headers:{Authorization:`Bearer ${process.env.STRIPE_SECRET_KEY}`,'Content-Type':'application/x-www-form-urlencoded','Idempotency-Key':key},body,signal:AbortSignal.timeout(15000)});
+  const response=await fetch(`https://api.stripe.com/v1/${path}`,{method:'POST',headers:{Authorization:`Bearer ${process.env.STRIPE_SECRET_KEY}`,'Content-Type':'application/x-www-form-urlencoded','Idempotency-Key':key,'Stripe-Version':'2026-08-26.dahlia'},body,signal:AbortSignal.timeout(15000)});
   const data=await response.json() as {id?:string;url?:string};
   if(!response.ok)throw new Error('Operator płatności jest chwilowo niedostępny. Ponów próbę dla tego samego zamówienia.');
   return data;
 }
 export async function startStripePayment(id:string, token:string) {
-  if(!process.env.STRIPE_SECRET_KEY||!process.env.STRIPE_WEBHOOK_SECRET)throw new Error('Stripe nie jest skonfigurowany.');
+  if(!stripeKeyMode()||!process.env.STRIPE_WEBHOOK_SECRET)throw new Error('Stripe nie jest skonfigurowany.');
   return transaction(async c=>{
     const row=(await c.query('SELECT data,token_hash FROM shop_orders WHERE id=$1 FOR UPDATE',[id])).rows[0];
     if(!row||row.token_hash!==hash(token))throw new Error('Nie znaleziono zamówienia.');
     const order=row.data as ShopOrder;
     if(order.payment!=='stripe'||order.paymentStatus!=='unpaid'||order.stockRestored||order.status==='cancelled')throw new Error('Nie można opłacić tego zamówienia.');
-    if(order.testMode!==process.env.STRIPE_SECRET_KEY!.startsWith('sk_test_'))throw new Error('Tryb Stripe nie odpowiada zamówieniu.');
-    if(order.stripeUrl)return {url:order.stripeUrl};
+    if(order.testMode!==(stripeKeyMode()==='test'))throw new Error('Tryb Stripe nie odpowiada zamówieniu.');
     const settings=(await c.query('SELECT data FROM shop_settings WHERE id=1')).rows[0]?.data;
-    if(!settings?.stripeActive)throw new Error('Stripe jest wyłączony.');
+    if(!paymentSettings({...defaultSettings,...settings}).stripeActive)throw new Error('Stripe jest wyłączony.');
+    if(order.stripeUrl)return {url:order.stripeUrl};
     const base=(process.env.APP_URL||'http://localhost:3000').replace(/\/$/,'');
     const receipt=`${base}/zamowienie?id=${encodeURIComponent(id)}&token=${encodeURIComponent(token)}`;
-    const body=new URLSearchParams({mode:'payment',success_url:receipt,cancel_url:receipt,client_reference_id:id,'metadata[order_id]':id,'customer_email':order.customer.email,locale:'pl','shipping_options[0][shipping_rate_data][type]':'fixed_amount','shipping_options[0][shipping_rate_data][fixed_amount][amount]':String(order.shipping),'shipping_options[0][shipping_rate_data][fixed_amount][currency]':'pln','shipping_options[0][shipping_rate_data][display_name]':'Dostawa',expires_at:String(Math.floor(Date.now()/1000)+3600)});
+    if(Date.now()-new Date(order.createdAt).getTime()>23*3600*1000)throw new Error('Termin płatności minął. Skontaktuj się ze sklepem.');
+    const body=new URLSearchParams({mode:'payment',integration_identifier:'uliczny-absurd-checkout-qntwzplk',success_url:receipt+'&payment=return',cancel_url:receipt+'&payment=cancelled',client_reference_id:id,'metadata[order_id]':id,'customer_email':order.customer.email,locale:'pl','shipping_options[0][shipping_rate_data][type]':'fixed_amount','shipping_options[0][shipping_rate_data][fixed_amount][amount]':String(order.shipping),'shipping_options[0][shipping_rate_data][fixed_amount][currency]':'pln','shipping_options[0][shipping_rate_data][display_name]':'Dostawa',expires_at:String(Math.floor(new Date(order.createdAt).getTime()/1000)+86400)});
     order.items.forEach((item,i)=>{body.set(`line_items[${i}][price_data][currency]`,'pln');body.set(`line_items[${i}][price_data][unit_amount]`,String(item.price));body.set(`line_items[${i}][price_data][product_data][name]`,`${item.name} / ${item.size}`);body.set(`line_items[${i}][quantity]`,String(item.quantity));});
     const session=await stripeRequest('checkout/sessions',body,`ua-session-${id}`);
     if(typeof session.id!=='string'||typeof session.url!=='string'||!session.url.startsWith('https://checkout.stripe.com/'))throw new Error('Nieprawidłowa odpowiedź operatora.');

@@ -1,3 +1,4 @@
+import { paymentSettings, stripeKeyMode } from './stripe-config';
 import { shippingTotal } from './shop-shipping';
 import { isDeliveryCountry } from './delivery-countries';
 import { legalContractText, legalVersion } from './legal-contract';
@@ -10,7 +11,7 @@ import { ShopOrder, ShopProduct, ShopSettings, shopSizes } from './shop-types';
 
 export async function getSettings():Promise<ShopSettings>{
   const stored=(await db().query('SELECT data FROM shop_settings WHERE id=1')).rows[0]?.data||{};
-  return {...defaultSettings,...stored};
+  return paymentSettings({...defaultSettings,...stored});
 }
 export function deliveryPrice(settings:ShopSettings,delivery:string,test=settings.testMode){
   if(delivery==='international')return settings.internationalShippingReady ? 11900 : null;
@@ -46,12 +47,13 @@ export async function createOrder(raw:unknown){
     if(existing){if(existing.request_hash!==requestHash)throw new Error('Klucz zamówienia został już użyty dla innych danych.');return existing.data as ShopOrder;}
     const stored=(await c.query('SELECT data FROM shop_settings WHERE id=1 FOR SHARE')).rows[0]?.data;
     if(!stored)throw new Error('Najpierw uruchom migrację i seed.');
-    const settings={...defaultSettings,...stored} as ShopSettings;
-    if(settings.testMode&&(input.payment!=='cod'||input.testAcknowledged!==true))throw new Error('Potwierdź próbne zamówienie za pobraniem — bez wysyłki i bez obowiązku zapłaty.');
+    const settings=paymentSettings({...defaultSettings,...stored} as ShopSettings);
+    const testOrder=settings.testMode||(input.payment==='stripe'&&settings.stripeTestMode===true);
+    if(testOrder&&input.testAcknowledged!==true)throw new Error('Potwierdź próbne zamówienie — bez wysyłki i bez obowiązku zapłaty.');
     if(!settings.testMode&&!settings.salesActive)throw new Error('Sprzedaż jest obecnie wyłączona.');
     if(input.payment==='cod'&&!settings.testMode&&!settings.codActive)throw new Error('Płatność za pobraniem jest wyłączona.');
     if(input.payment==='stripe'&&(!settings.stripeActive||!process.env.STRIPE_SECRET_KEY||!process.env.STRIPE_WEBHOOK_SECRET))throw new Error('Płatności online nie są skonfigurowane.');
-    if(input.payment==='stripe'&&settings.testMode!==Boolean(process.env.STRIPE_SECRET_KEY?.startsWith('sk_test_')))throw new Error('Tryb klucza Stripe nie odpowiada trybowi sklepu.');
+    if(input.payment==='stripe'&&testOrder!==(stripeKeyMode()==='test'))throw new Error('Tryb klucza Stripe nie odpowiada trybowi sklepu.');
     if(!settings.testMode&&(!settings.legalReady||!settings.sellerPhone||!settings.fulfillmentDays||!settings.sizeChartApproved||!settings.shippingReady))throw new Error('Informacje wymagane do uruchomienia sprzedaży nie zostały uzupełnione.');
     const abroad=input.customer.country!=='PL';
     if(abroad!== (input.delivery==='international'))throw new Error('Sposób dostawy musi odpowiadać wybranemu krajowi.');
@@ -71,16 +73,16 @@ export async function createOrder(raw:unknown){
       const row=(await c.query('SELECT p.data,v.stock,v.test_stock FROM shop_products p JOIN shop_variants v ON p.id=v.product_id WHERE p.id=$1 AND v.size=$2 FOR UPDATE OF p,v',[item.id,item.size])).rows[0];
       if(!row||!row.data.active||row.data.hidden||row.data.soldOut)throw new Error('Produkt niedostępny.');
       const p=row.data as ShopProduct;if(!settings.testMode&&!productReadyForSale(p))throw new Error('Produkt wymaga uzupełnienia i potwierdzenia informacji o składzie oraz bezpieczeństwie.');
-      const price=settings.testMode?(p.price??12900):p.price;const stock=settings.testMode?row.test_stock:row.stock;
+      const price=settings.testMode?(p.price??12900):p.price;const stock=testOrder?row.test_stock:row.stock;
       if(price===null||(!settings.testMode&&!p.priceApproved))throw new Error('Cena produktu nie jest zatwierdzona.');if(stock===null||stock<item.quantity)throw new Error('Niewystarczająca liczba sztuk wybranego rozmiaru.');
-      await c.query(`UPDATE shop_variants SET ${settings.testMode?'test_stock':'stock'}=${settings.testMode?'test_stock':'stock'}-$3 WHERE product_id=$1 AND size=$2`,[item.id,item.size,item.quantity]);items.push({...item,name:p.name,image:p.image,price});
+      await c.query(`UPDATE shop_variants SET ${testOrder?'test_stock':'stock'}=${testOrder?'test_stock':'stock'}-$3 WHERE product_id=$1 AND size=$2`,[item.id,item.size,item.quantity]);items.push({...item,name:p.name,image:p.image,price});
     }
     const subtotal=items.reduce((n,i)=>n+i.price*i.quantity,0);const shipping=shippingTotal(settings,input.delivery,input.payment,settings.testMode);
     if(input.expectedTotal!==undefined&&input.expectedTotal!==subtotal+shipping)throw new Error('Cena lub dostawa uległa zmianie. Odśwież koszyk i potwierdź nową kwotę.');
     const token=randomBytes(32).toString('hex');const now=new Date().toISOString();
-    const order:ShopOrder={id:randomUUID(),number:`${settings.testMode?'TEST':'UA'}-${now.slice(0,10).replaceAll('-','')}-${randomBytes(5).toString('hex').toUpperCase()}`,token,legalText:legalContractText,legalVersion,sellerPhone:settings.sellerPhone,fulfillmentDays:settings.fulfillmentDays,createdAt:now,testMode:settings.testMode,customer:input.customer,items,subtotal,shipping,total:subtotal+shipping,delivery:input.delivery,payment:input.payment,status:'new',paymentStatus:'unpaid',shippingStatus:'pending',returnStatus:'none',trackingNumber:'',carrier:input.delivery==='international'?'':'InPost',history:[{at:now,action:`Złożono zamówienie. ${input.payment==='cod'?'Płatność za pobraniem':'Stripe'}: nieopłacone. Regulamin: ${legalVersion}.`}],notificationStatus:settings.testMode?'test_not_sent':process.env.RESEND_API_KEY&&process.env.EMAIL_FROM?'pending':'not_configured',stockRestored:false};
+    const order:ShopOrder={id:randomUUID(),number:`${testOrder?'TEST':'UA'}-${now.slice(0,10).replaceAll('-','')}-${randomBytes(5).toString('hex').toUpperCase()}`,token,legalText:legalContractText,legalVersion,sellerPhone:settings.sellerPhone,fulfillmentDays:settings.fulfillmentDays,createdAt:now,testMode:testOrder,customer:input.customer,items,subtotal,shipping,total:subtotal+shipping,delivery:input.delivery,payment:input.payment,status:'new',paymentStatus:'unpaid',shippingStatus:'pending',returnStatus:'none',trackingNumber:'',carrier:input.delivery==='international'?'':'InPost',history:[{at:now,action:`Złożono zamówienie. ${input.payment==='cod'?'Płatność za pobraniem':'Stripe'}: nieopłacone. Regulamin: ${legalVersion}.`}],notificationStatus:testOrder?'test_not_sent':process.env.RESEND_API_KEY&&process.env.EMAIL_FROM?'pending':'not_configured',stockRestored:false};
     await c.query('INSERT INTO shop_orders(id,number,token_hash,idempotency_key,request_hash,data) VALUES($1,$2,$3,$4,$5,$6)',[order.id,order.number,hash(token),input.idempotencyKey,requestHash,JSON.stringify(order)]);
-    if(!settings.testMode)for(const recipient of new Set([input.customer.email.toLowerCase(),'ulicznyabsurd@gmail.com']))await c.query('INSERT INTO shop_outbox(id,order_id,recipient,event) VALUES($1,$2,$3,$4)',[randomUUID(),order.id,recipient,'new']);
+    if(!testOrder)for(const recipient of new Set([input.customer.email.toLowerCase(),'ulicznyabsurd@gmail.com']))await c.query('INSERT INTO shop_outbox(id,order_id,recipient,event) VALUES($1,$2,$3,$4)',[randomUUID(),order.id,recipient,'new']);
     return order;
   });
 }
