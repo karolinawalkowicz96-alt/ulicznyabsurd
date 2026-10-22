@@ -39,7 +39,8 @@ export async function applyStripeEvent(event:{id:string;type:string;livemode:boo
   const paid=['checkout.session.completed','checkout.session.async_payment_succeeded'].includes(event.type)&&s?.payment_status==='paid';
   const failed=['checkout.session.expired','checkout.session.async_payment_failed'].includes(event.type);
   if(!paid&&!failed)return 'ignored';
-  if(!s?.metadata?.order_id||s.currency!=='pln'||!Number.isSafeInteger(s.amount_total))throw new Error('Webhook nie odpowiada zamówieniu.');
+  if(!s?.metadata?.order_id)return 'ignored'; // Other Checkout integrations on this Stripe account are unrelated.
+  if(s.currency!=='pln'||!Number.isSafeInteger(s.amount_total))throw new Error('Webhook nie odpowiada zamówieniu.');
   return transaction(async c=>{
     const row=(await c.query('SELECT data FROM shop_orders WHERE id=$1 FOR UPDATE',[s.metadata!.order_id])).rows[0];
     if(!row)return 'ignored'; // Deleted pre-launch orders must not trigger webhook retry storms.

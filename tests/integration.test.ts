@@ -191,3 +191,8 @@ test('abandoned reservation without session expires safely and releases stock ex
  const before=await stock();assert.equal(await releaseAbandonedStripeReservations(),1);assert.equal(await stock(),before+2);
  assert.equal(await releaseAbandonedStripeReservations(),0);assert.equal(await stock(),before+2);
 });
+
+test('unrelated Stripe Checkout events are ignored without retrying',async()=>{
+ const {applyStripeEvent}=await import('../lib/shop-stripe');
+ assert.equal(await applyStripeEvent({id:'evt_unrelated',type:'checkout.session.expired',livemode:true,data:{object:{id:'cs_unrelated',currency:'pln',amount_total:9898,payment_status:'unpaid'}}}),'ignored');
+});
