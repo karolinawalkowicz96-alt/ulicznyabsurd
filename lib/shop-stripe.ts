@@ -42,7 +42,7 @@ export async function applyStripeEvent(event:{id:string;type:string;livemode:boo
   if(!s?.metadata?.order_id||s.currency!=='pln'||!Number.isSafeInteger(s.amount_total))throw new Error('Webhook nie odpowiada zamówieniu.');
   return transaction(async c=>{
     const row=(await c.query('SELECT data FROM shop_orders WHERE id=$1 FOR UPDATE',[s.metadata!.order_id])).rows[0];
-    if(!row)throw new Error('Nie znaleziono zamówienia.');
+    if(!row)return 'ignored'; // Deleted pre-launch orders must not trigger webhook retry storms.
     const order=row.data as ShopOrder;
     if(order.payment!=='stripe'||order.total!==s.amount_total||order.stripeSessionId!==s.id||order.testMode===event.livemode)throw new Error('Dane płatności nie odpowiadają zamówieniu.');
     if(order.paymentStatus==='paid')return 'duplicate';
@@ -52,5 +52,24 @@ export async function applyStripeEvent(event:{id:string;type:string;livemode:boo
     await c.query('UPDATE shop_orders SET data=$2 WHERE id=$1',[order.id,JSON.stringify(order)]);
     if(!order.testMode)for(const recipient of new Set([order.customer.email,'ulicznyabsurd@gmail.com']))await c.query('INSERT INTO shop_outbox(id,order_id,recipient,event) VALUES($1,$2,$3,$4)',[randomUUID(),order.id,recipient,paid?'paid':'cancelled']);
     return 'ok';
+  });
+}
+
+// A failed/lost session request can leave a reservation without a stored URL.
+// Its deterministic expires_at is at most createdAt + 24h. Wait another hour
+// before release: an ambiguous Stripe response must never free sellable stock early.
+export async function releaseAbandonedStripeReservations() {
+  return transaction(async c=>{
+    const rows=(await c.query("SELECT data FROM shop_orders WHERE data->>'payment'='stripe' AND data->>'paymentStatus'='unpaid' AND COALESCE(data->>'stripeSessionId','')='' AND created_at < now()-interval '25 hours' ORDER BY id FOR UPDATE SKIP LOCKED")).rows;
+    let released=0;
+    for(const row of rows){
+      const order=row.data as ShopOrder;
+      if(order.stockRestored)continue;
+      for(const i of [...order.items].sort((a,b)=>(a.id+a.size).localeCompare(b.id+b.size)))await c.query(`UPDATE shop_variants SET ${order.testMode?'test_stock':'stock'}=COALESCE(${order.testMode?'test_stock':'stock'},0)+$3 WHERE product_id=$1 AND size=$2`,[i.id,i.size,i.quantity]);
+      order.stockRestored=true;order.paymentStatus='expired';order.status='cancelled';
+      order.history.push({at:new Date().toISOString(),action:'Zwolniono wygasłą rezerwację bez rozpoczętej płatności.'});
+      await c.query('UPDATE shop_orders SET data=$2 WHERE id=$1',[order.id,JSON.stringify(order)]);released++;
+    }
+    return released;
   });
 }

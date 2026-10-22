@@ -122,3 +122,72 @@ test('test Stripe Checkout on live storefront isolates stock, mail and rejects l
 });
 
 test('disabled COD rejects new orders even in test mode',async()=>{process.env.COD_CHECKOUT_ENABLED='false';try{await assert.rejects(createOrder(input()),/pobraniem jest wyłączona/);}finally{delete process.env.COD_CHECKOUT_ENABLED;}});
+
+test('production accepts only live keys; preview cannot activate live payments',async()=>{
+ const {paymentSettings}=await import('../lib/stripe-config');
+ const keys=['VERCEL_ENV','STRIPE_SECRET_KEY','STRIPE_WEBHOOK_SECRET','STRIPE_CHECKOUT_MODE','STRIPE_CHECKOUT_ENABLED'] as const;
+ const previous=Object.fromEntries(keys.map(k=>[k,process.env[k]]));
+ try{
+  Object.assign(process.env,{VERCEL_ENV:'production',STRIPE_SECRET_KEY:'sk_test_mock',STRIPE_WEBHOOK_SECRET:'whsec_mock',STRIPE_CHECKOUT_MODE:'test',STRIPE_CHECKOUT_ENABLED:'true'});
+  assert.equal(paymentSettings(defaultSettings).stripeActive,false);assert.equal(paymentSettings(defaultSettings).testMode,false);
+  Object.assign(process.env,{STRIPE_SECRET_KEY:'sk_live_mock',STRIPE_CHECKOUT_MODE:'live'});
+  assert.equal(paymentSettings(defaultSettings).stripeActive,true);
+  process.env.VERCEL_ENV='preview';
+  assert.equal(paymentSettings(defaultSettings).stripeActive,false);
+ }finally{for(const key of keys){if(previous[key]===undefined)delete process.env[key];else process.env[key]=previous[key];}}
+});
+
+test('live Stripe reserves inventory once, retries one session and delivers one paid notification per recipient',async()=>{
+ const {startStripePayment,applyStripeEvent}=await import('../lib/shop-stripe');
+ const oldSettings=(await db().query('SELECT data FROM shop_settings WHERE id=1')).rows[0].data;
+ const originalFetch=globalThis.fetch;
+ const keys=['VERCEL_ENV','STRIPE_SECRET_KEY','STRIPE_WEBHOOK_SECRET','STRIPE_CHECKOUT_MODE','STRIPE_CHECKOUT_ENABLED'] as const;
+ const previous=Object.fromEntries(keys.map(k=>[k,process.env[k]]));
+ try{
+  Object.assign(process.env,{VERCEL_ENV:'production',STRIPE_SECRET_KEY:'sk_live_mock',STRIPE_WEBHOOK_SECRET:'whsec_mock',STRIPE_CHECKOUT_MODE:'live',STRIPE_CHECKOUT_ENABLED:'true'});
+  await db().query('UPDATE shop_settings SET data=$1',[JSON.stringify({...oldSettings,testMode:false,salesActive:true,legalReady:true,shippingReady:true,sizeChartApproved:true,courierActive:true})]);
+  await db().query('UPDATE shop_variants SET stock=10');
+  const request={...input(),payment:'stripe',testAcknowledged:false};
+  const order=await createOrder(request);assert.equal(order.testMode,false);assert.match(order.number,/^UA-/);
+  assert.equal((await createOrder(request)).id,order.id);
+  const stock=async()=>(await db().query("SELECT stock FROM shop_variants WHERE product_id='oko-01' AND size='M'")).rows[0].stock;
+  assert.equal(await stock(),8);
+  let calls=0;
+  globalThis.fetch=async(_url,options)=>{
+   calls++;const body=new URLSearchParams(String(options?.body));
+   assert.equal(body.get('metadata[order_id]'),order.id);assert.equal(body.get('line_items[0][price_data][currency]'),'pln');
+   return Response.json({id:'cs_live_mock',url:'https://checkout.stripe.com/c/pay/cs_live_mock'});
+  };
+  await startStripePayment(order.id,order.token!);await startStripePayment(order.id,order.token!);assert.equal(calls,1);
+  const event={id:'evt_live_mock',type:'checkout.session.completed',livemode:true,data:{object:{id:'cs_live_mock',currency:'pln',amount_total:order.total,payment_status:'paid',metadata:{order_id:order.id}}}};
+  assert.equal(await applyStripeEvent(event),'ok');assert.equal(await applyStripeEvent(event),'duplicate');assert.equal(await stock(),8);
+  assert.equal(Number((await db().query("SELECT count(*) FROM shop_outbox WHERE order_id=$1 AND event='paid'",[order.id])).rows[0].count),2);
+ }finally{
+  globalThis.fetch=originalFetch;
+  for(const key of keys){if(previous[key]===undefined)delete process.env[key];else process.env[key]=previous[key];}
+  await db().query('UPDATE shop_settings SET data=$1',[JSON.stringify(oldSettings)]);
+ }
+});
+
+test('launch cleanup removes dependent data, resets all existing variants once, preserves future orders and stock',async()=>{
+ const {prepareProductionLaunch}=await import('../lib/shop-launch');
+ const count=Number((await db().query('SELECT count(*) FROM shop_orders')).rows[0].count);
+ const audit=await prepareProductionLaunch();assert.equal(audit.deletedOrders,count);assert.equal(audit.products,8);assert.equal(audit.variants,40);assert.equal(audit.remainingOrders,0);
+ assert.equal(Number((await db().query('SELECT count(*) FROM shop_outbox')).rows[0].count),0);
+ assert.equal(Number((await db().query('SELECT count(*) FROM shop_variants WHERE stock=10')).rows[0].count),40);
+ await db().query('UPDATE shop_settings SET data=$1',[JSON.stringify(defaultSettings)]);
+ const next=await createOrder(input());
+ await db().query("UPDATE shop_variants SET stock=9 WHERE product_id='oko-01' AND size='M'");
+ assert.equal((await prepareProductionLaunch()).alreadyApplied,true);
+ assert.equal(Number((await db().query('SELECT count(*) FROM shop_orders WHERE id=$1',[next.id])).rows[0].count),1);
+ assert.equal((await db().query("SELECT stock FROM shop_variants WHERE product_id='oko-01' AND size='M'")).rows[0].stock,9);
+});
+
+test('abandoned reservation without session expires safely and releases stock exactly once',async()=>{
+ const {releaseAbandonedStripeReservations}=await import('../lib/shop-stripe');
+ const order=await createOrder(input());
+ await db().query("UPDATE shop_orders SET data=data || '{\"payment\":\"stripe\"}'::jsonb,created_at=now()-interval '26 hours' WHERE id=$1",[order.id]);
+ const stock=async()=>(await db().query("SELECT test_stock FROM shop_variants WHERE product_id='oko-01' AND size='M'")).rows[0].test_stock;
+ const before=await stock();assert.equal(await releaseAbandonedStripeReservations(),1);assert.equal(await stock(),before+2);
+ assert.equal(await releaseAbandonedStripeReservations(),0);assert.equal(await stock(),before+2);
+});

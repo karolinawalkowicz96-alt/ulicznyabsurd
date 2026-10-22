@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ArrowUpRight, X, Plus, Menu, LoaderCircle } from 'lucide-react';
 import CampaignHero from './CampaignHero';
 import Eyes from './Eyes';
@@ -102,8 +102,7 @@ export default function Store({ initialProduct = false, initialCatalog, contactE
     const displayProducts = (initialCatalog || shop.catalog.products.length) ? liveProducts.map((p,i)=>({...showcaseProducts.find(x=>x.id===p.id),...p,title:showcaseProducts.find(x=>x.id===p.id)?.title||[p.name,''],stamp:showcaseProducts.find(x=>x.id===p.id)?.stamp||['NOWY','ABSURD'],alt:`Biała koszulka z nadrukiem ${p.name}`,photoTag:'BIAŁA KOSZULKA'})) : showcaseProducts;
     const [stats, setStats] = useState<SocialSnapshot[] | null>(null), [statsError, setStatsError] = useState(false), [selected, setSelected] = useState(0);
     const [formState, setFormState] = useState<'idle' | 'sending' | 'success' | 'error'>('idle'), [formMessage, setFormMessage] = useState('');
-    useEffect(() => { loadStats(); const timer = window.setInterval(() => loadStats(), 5 * 60 * 1000); return () => window.clearInterval(timer); }, []);
-    async function loadStats() {
+    const loadStats = useCallback(async () => {
         try {
             const r = await fetch(`/api/stats?t=${Date.now()}`, { cache: 'no-store' });
             if (!r.ok) throw Error();
@@ -112,7 +111,10 @@ export default function Store({ initialProduct = false, initialCatalog, contactE
             setStatsError(false);
         }
         catch { setStatsError(true); }
-    }
+    }, []);
+    // loadStats updates state only after the external fetch completes.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    useEffect(() => { void loadStats(); const timer = window.setInterval(() => void loadStats(), 5 * 60 * 1000); return () => window.clearInterval(timer); }, [loadStats]);
     function openProduct(index=0) {setShowcaseIndex(index);setZoom(false);setProductOpen(true);}
     async function send(e: React.FormEvent<HTMLFormElement>) { e.preventDefault(); setFormState('sending'); const form = e.currentTarget; const data = Object.fromEntries(new FormData(form)); try {
         const r = await fetch('/api/contact', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
