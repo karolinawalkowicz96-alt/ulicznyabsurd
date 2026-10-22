@@ -5,6 +5,7 @@ import { Check, MapPin, PackageCheck, ShoppingBag } from 'lucide-react';
 import { useShop, ShopHeader, CountryPicker, priceOf, type Catalog } from './Shop';
 import { deliveryCountryName } from '@/lib/delivery-countries';
 import LockerPicker from './LockerPicker';
+import SecurePayments from './SecurePayments';
 import { shippingTotal } from '@/lib/shop-shipping';
 import { money } from '@/lib/catalog';
 import type { ShopOrder } from '@/lib/shop-types';
@@ -95,12 +96,13 @@ export default function Checkout(){
           <details className="checkout-details"><summary>Dane do dokumentu sprzedaży (opcjonalnie)</summary><label>Nazwa / dane i adres; identyfikator podatkowy, jeżeli dotyczy<textarea name="invoice" maxLength={1000} rows={3}/></label></details>
         </section>
 
+        {stripeActive&&<SecurePayments/>}
+
         <section className="checkout-card checkout-legal"><div className="checkout-card-title"><span>03</span><div><h2>Przed zamówieniem</h2><p>Najważniejsze informacje o sprzedawcy i umowie.</p></div></div>
           <div className="seller-box"><strong>ULICZNY ABSURD — Paweł Duszyński</strong><span>ul. Północna 24/2, 44-335 Jastrzębie-Zdrój</span><a href="mailto:ulicznyabsurd@gmail.com">ulicznyabsurd@gmail.com</a>{settings.sellerPhone?<a href={`tel:${String(settings.sellerPhone)}`}>{String(settings.sellerPhone)}</a>:<span className="seller-missing">Telefon zostanie uzupełniony przed uruchomieniem sprzedaży.</span>}</div>
           <p>Czas realizacji: 7 dni roboczych. Do tego należy doliczyć czas transportu. Standardowe koszulki z gotowym wzorem podlegają ustawowemu prawu odstąpienia na zasadach opisanych w <Link href="/zwroty" target="_blank">informacji o zwrotach</Link>.</p>
 <label className="shop-checkbox"><input type="checkbox" name="acceptedTerms" required/><span>Zapoznałem/am się z <Link href="/regulamin" target="_blank">regulaminem sklepu</Link> i akceptuję jego warunki. <Link href="/prywatnosc" target="_blank">Polityka prywatności</Link> zawiera informacje o przetwarzaniu danych.</span></label>
         </section>
-        <div className="summary-note"><Check size={18}/><p><strong>BEZPIECZNA PŁATNOŚĆ</strong><br/>Po złożeniu zamówienia przejdziesz bezpośrednio do bezpiecznej płatności Stripe.</p></div>
         {error&&<p className="error" role="alert">{error}</p>}
         <button className="button dark checkout-submit" disabled={busy||!checkoutAvailable} type="submit">{busy?'Przechodzę do płatności…':'Złóż zamówienie z obowiązkiem zapłaty'}</button>
         {!checkoutAvailable&&<p className="checkout-help">{abroad?'Zamówienie zagraniczne będzie dostępne po potwierdzeniu przewoźnika i uruchomieniu płatności online.':'Przycisk pozostaje nieaktywny, dopóki sklep, dostawa i wybrana płatność nie są rzeczywiście dostępne.'}</p>}
