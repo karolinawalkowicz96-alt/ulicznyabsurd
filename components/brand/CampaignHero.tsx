@@ -8,7 +8,7 @@ export default function CampaignHero() {
         <img src="/hero/campaign-desktop.webp" alt="Koszulka Nie śpimy, lecimy — letnia stylizacja Uliczny Absurd" width="1920" height="1080" fetchPriority="high" loading="eager" />
       </picture>
       <div className="campaign-content">
-        <h1 id="campaign-title"><span>POWAGA?</span><span>NIE NOSZĘ.</span></h1>
+        <h1 id="campaign-title" aria-label="Powaga? Nie noszę."><span className="campaign-question" aria-hidden="true">POWAGA?</span><span className="campaign-answer" aria-hidden="true"><strong>NIE NOSZĘ.</strong></span></h1>
         <p>Filmy, które zostają w głowie.<br />Koszulki, które mówią za Ciebie.</p>
         <div className="campaign-actions">
           <a className="button dark" href="#kolekcja">Zobacz koszulki <ArrowUpRight size={24} /></a>
