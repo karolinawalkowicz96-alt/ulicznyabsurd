@@ -1,4 +1,4 @@
-import { prepareProductionLaunch } from '../lib/shop-launch';
+import { addDzbanProduct } from '../lib/shop-dzban';
 import { db, transaction } from '../lib/shop-db';
 import { getSettings } from '../lib/shop-service';
 import { saveSettings } from '../lib/shop-admin';
@@ -76,6 +76,6 @@ if (process.env.VERCEL_ENV === 'production' && process.env.DATABASE_URL) {
     await db().query('INSERT INTO shop_data_migrations(id) VALUES($1) ON CONFLICT DO NOTHING',[activationId]);
     console.log('Validated live InPost COD sales activated at 29.99 PLN total shipping.');
   }
-  console.log('PRODUCTION_LAUNCH_AUDIT',JSON.stringify(await prepareProductionLaunch()));
+  console.log('DZBAN_PRODUCT_AUDIT',JSON.stringify(await addDzbanProduct()));
   await db().end();
 }

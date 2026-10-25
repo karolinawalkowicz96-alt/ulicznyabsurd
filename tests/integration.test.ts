@@ -196,3 +196,20 @@ test('unrelated Stripe Checkout events are ignored without retrying',async()=>{
  const {applyStripeEvent}=await import('../lib/shop-stripe');
  assert.equal(await applyStripeEvent({id:'evt_unrelated',type:'checkout.session.expired',livemode:true,data:{object:{id:'cs_unrelated',currency:'pln',amount_total:9898,payment_status:'unpaid'}}}),'ignored');
 });
+
+test('DZBAN ROKU is first with five variants; repeat deployment preserves sales and other inventory',async()=>{
+ const {addDzbanProduct}=await import('../lib/shop-dzban');
+ await db().query('CREATE TABLE IF NOT EXISTS shop_data_migrations (id text PRIMARY KEY, applied_at timestamptz NOT NULL DEFAULT now())');
+ const before=(await db().query('SELECT product_id,size,stock FROM shop_variants ORDER BY product_id,size')).rows;
+ assert.equal((await addDzbanProduct()).alreadyApplied,false);
+ const products=(await db().query("SELECT data FROM shop_products ORDER BY (data->>'sortOrder')::int")).rows;
+ assert.equal(products[0].data.id,'dzban-09');
+ assert.equal(products[0].data.isNew,true);
+ const variants=(await db().query("SELECT size,stock FROM shop_variants WHERE product_id='dzban-09' ORDER BY size")).rows;
+ assert.deepEqual(variants.map(v=>v.size),['L','M','S','XL','XXL']);
+ assert.ok(variants.every(v=>v.stock===10));
+ await db().query("UPDATE shop_variants SET stock=9 WHERE product_id='dzban-09' AND size='M'");
+ assert.equal((await addDzbanProduct()).alreadyApplied,true);
+ assert.equal((await db().query("SELECT stock FROM shop_variants WHERE product_id='dzban-09' AND size='M'")).rows[0].stock,9);
+ assert.deepEqual((await db().query("SELECT product_id,size,stock FROM shop_variants WHERE product_id<>'dzban-09' ORDER BY product_id,size")).rows,before);
+});
